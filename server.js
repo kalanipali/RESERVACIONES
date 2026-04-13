@@ -547,6 +547,9 @@ const server = http.createServer(async (req, res) => {
       const todayCancun = cancunDateStr(new Date(nowMs));
       const welcomes = data.welcomes || [];
 
+      // Checadas de hoy (para ordenamiento por hora de entrada)
+      const checadasHoy = (data.checadas || []).filter(c => c.fecha === todayCancun);
+
       const result = drivers.map(d => {
         // 1. EN SERVICIO: booking o welcome con estatusViaje = 'en-camino'
         const enServicioBooking = data.bookings.find(b =>
@@ -563,6 +566,14 @@ const server = http.createServer(async (req, res) => {
           w.driverId === d.id && w.estatusViaje === 'pendiente' &&
           w.fecha === todayCancun && isWithinOneHour(w.fecha, w.hora, nowMs));
         const proximos = pendienteBooking || pendienteWelcome;
+
+        // 3. INFO DE CHECADA HOY: primera ENTRADA del driver hoy
+        const entradasDriver = checadasHoy
+          .filter(c => c.driverId === d.id && c.tipo === 'ENTRADA')
+          .sort((a,b) => (a.creadoEn||'').localeCompare(b.creadoEn||''));
+        const primeraEntrada = entradasDriver.length ? entradasDriver[0] : null;
+        const checadaHoraEntrada = primeraEntrada ? primeraEntrada.creadoEn : null;
+        const noHaChecado = !primeraEntrada;
 
         let estado = 'disponible';
         let minutos = null;
@@ -581,9 +592,12 @@ const server = http.createServer(async (req, res) => {
         } else if (d.manualEstado) {
           // Override manual (solo aplica si no hay estado natural)
           estado = d.manualEstado;
+        } else if (noHaChecado) {
+          // Sin checada de entrada hoy
+          estado = 'no-checado';
         }
 
-        return { id:d.id, nombre:d.nombre, estado, minutos, refId, destino };
+        return { id:d.id, nombre:d.nombre, estado, minutos, refId, destino, checadaHoraEntrada, noHaChecado };
       });
       return json(res, result);
     }
@@ -599,6 +613,17 @@ const server = http.createServer(async (req, res) => {
       data.users[uIdx] = { ...data.users[uIdx], manualEstado: nuevoEstado };
       writeData(data);
       return json(res, { ok:true, manualEstado: nuevoEstado });
+    }
+
+    // POST /api/drivers/me/disponible — el driver se marca disponible (Ya en el Hotel)
+    if (pathname === '/api/drivers/me/disponible' && method === 'POST') {
+      if (rol !== 'driver') return err(res, 'Sin permiso', 403);
+      const data = readData();
+      const uIdx = data.users.findIndex(u => u.id === sess.userId);
+      if (uIdx === -1) return err(res, 'Driver no encontrado', 404);
+      data.users[uIdx] = { ...data.users[uIdx], manualEstado: 'disponible' };
+      writeData(data);
+      return json(res, { ok:true, manualEstado: 'disponible' });
     }
 
     // GET /api/conductores (compatibilidad — devuelve drivers)
@@ -802,9 +827,9 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
-    // POST /api/checadas — registrar entrada/salida (solo driver)
+    // POST /api/checadas — registrar entrada/salida (driver, coordinador, asesor)
     if (pathname === '/api/checadas' && method === 'POST') {
-      if (rol !== 'driver') return err(res, 'Sin permiso', 403);
+      if (!['driver','coordinador','asesor'].includes(rol)) return err(res, 'Sin permiso', 403);
 
       // ── 1. GPS REQUERIDO ─────────────────────────────────────
       const ckLat = typeof body.lat === 'number' ? body.lat : null;
@@ -885,13 +910,14 @@ const server = http.createServer(async (req, res) => {
       return json(res, checada, 201);
     }
 
-    // GET /api/checadas — historial de checadas (admin/admin_unico; driver ve las suyas)
+    // GET /api/checadas — historial de checadas (admin/admin_unico ven todo; driver/coordinador/asesor ven los suyos)
     if (pathname === '/api/checadas' && method === 'GET') {
       const HR_ROLES = ['admin_unico','admin'];
-      if (!HR_ROLES.includes(rol) && rol !== 'driver') return err(res, 'Sin permiso', 403);
+      const STAFF_CHECKER_ROLES = ['driver','coordinador','asesor'];
+      if (!HR_ROLES.includes(rol) && !STAFF_CHECKER_ROLES.includes(rol)) return err(res, 'Sin permiso', 403);
       const data = readData();
       let lista = data.checadas || [];
-      if (rol === 'driver') lista = lista.filter(c => c.driverId === sess.userId);
+      if (STAFF_CHECKER_ROLES.includes(rol)) lista = lista.filter(c => c.driverId === sess.userId);
       // Ordenar más reciente primero
       lista = [...lista].sort((a,b) => b.creadoEn.localeCompare(a.creadoEn));
       return json(res, lista);
@@ -1007,6 +1033,63 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+// ─── AUTO-CIERRE DIARIO DE SERVICIOS (08:50 AM Cancún) ──────────────────────
+function autoClosePreviousDayServices() {
+  const data = readData();
+  const todayCancun = cancunDateStr();
+  let changed = false;
+
+  // Cerrar bookings de días anteriores que sigan pendientes o en-camino
+  data.bookings.forEach((b, i) => {
+    if (b.fecha < todayCancun && (b.estatusViaje === 'pendiente' || b.estatusViaje === 'en-camino')) {
+      data.bookings[i] = { ...b, estatusViaje: 'completado', serviceEndTime: new Date().toISOString() };
+      changed = true;
+    }
+  });
+
+  // Cerrar welcomes de días anteriores
+  if (data.welcomes) {
+    data.welcomes.forEach((w, i) => {
+      if (w.fecha < todayCancun && (w.estatusViaje === 'pendiente' || w.estatusViaje === 'en-camino')) {
+        data.welcomes[i] = { ...w, estatusViaje: 'completado', serviceEndTime: new Date().toISOString() };
+        changed = true;
+      }
+    });
+  }
+
+  if (changed) {
+    writeData(data);
+    console.log(`[auto-cierre] ✅ Servicios de días anteriores cerrados automáticamente (${new Date().toISOString()})`);
+  }
+}
+
+// Programar auto-cierre a las 08:50 AM Cancún cada día
+function scheduleAutoCierre() {
+  function getNextRun() {
+    const now = new Date();
+    const todayStr = cancunDateStr(now);
+    let target = Date.parse(`${todayStr}T08:50:00-05:00`);
+    if (isNaN(target) || target <= now.getTime()) {
+      // Si ya pasó hoy, programar para mañana
+      const tomorrowMs = now.getTime() + 86400000;
+      const tomorrowStr = cancunDateStr(new Date(tomorrowMs));
+      target = Date.parse(`${tomorrowStr}T08:50:00-05:00`);
+    }
+    return target - now.getTime();
+  }
+
+  function runAndReschedule() {
+    try { autoClosePreviousDayServices(); } catch (e) { console.error('[auto-cierre] Error:', e.message); }
+    setTimeout(runAndReschedule, getNextRun());
+  }
+
+  setTimeout(runAndReschedule, getNextRun());
+  console.log('[auto-cierre] ⏰ Programado para las 08:50 AM Cancún cada día');
+
+  // También ejecutar al inicio si hay servicios de días anteriores que cerrar
+  try { autoClosePreviousDayServices(); } catch (e) { console.error('[auto-cierre] Error inicial:', e.message); }
+}
+
 // ─── START ────────────────────────────────────────────────────
 server.listen(PORT, () => {
   console.log('\n╔══════════════════════════════════════════╗');
@@ -1019,4 +1102,5 @@ server.listen(PORT, () => {
   console.log('   coordinador → Coordinador');
   console.log('   asesor      → Asesor de Ventas');
   console.log('   driver1     → Driver\n');
+  scheduleAutoCierre();
 });

@@ -157,11 +157,12 @@
       "horas": 0,
       "metodoPago": "club-cash",
       "estatusPago": "pagado",
-      "estatusViaje": "pendiente",
+      "estatusViaje": "completado",
       "serviceStartTime": null,
       "notas": "",
       "creadoPor": "u1",
-      "creadoEn": "2026-04-06T02:38:45.862Z"
+      "creadoEn": "2026-04-06T02:38:45.862Z",
+      "serviceEndTime": "2026-04-13T21:11:14.224Z"
     },
     {
       "id": "4acbdd5d-7580-4ef0-95a9-f40a432aa568",
@@ -184,11 +185,12 @@
       "horas": 0,
       "metodoPago": "efectivo",
       "estatusPago": "pagado",
-      "estatusViaje": "pendiente",
+      "estatusViaje": "completado",
       "serviceStartTime": null,
       "notas": "",
       "creadoPor": "u1",
-      "creadoEn": "2026-04-06T02:39:26.492Z"
+      "creadoEn": "2026-04-06T02:39:26.492Z",
+      "serviceEndTime": "2026-04-13T21:11:14.224Z"
     },
     {
       "id": "dc214bbf-4ca7-4d19-9841-fd5158140a2c",
@@ -239,11 +241,12 @@
       "horas": 0,
       "metodoPago": "efectivo",
       "estatusPago": "pagado",
-      "estatusViaje": "pendiente",
+      "estatusViaje": "completado",
       "serviceStartTime": null,
       "notas": "",
       "creadoPor": "u1",
-      "creadoEn": "2026-04-07T00:18:41.217Z"
+      "creadoEn": "2026-04-07T00:18:41.217Z",
+      "serviceEndTime": "2026-04-13T21:11:14.224Z"
     },
     {
       "id": "5a9d9aef-dbc1-419e-803e-efac155eee1f",
@@ -266,11 +269,12 @@
       "horas": 0,
       "metodoPago": "link",
       "estatusPago": "pagado",
-      "estatusViaje": "pendiente",
+      "estatusViaje": "completado",
       "serviceStartTime": null,
       "notas": "",
       "creadoPor": "u1",
-      "creadoEn": "2026-04-07T00:22:12.666Z"
+      "creadoEn": "2026-04-07T00:22:12.666Z",
+      "serviceEndTime": "2026-04-13T21:11:14.224Z"
     },
     {
       "id": "f389bb48-d8c2-459c-9bee-207ecd43fd16",
@@ -293,11 +297,12 @@
       "horas": 0,
       "metodoPago": "link",
       "estatusPago": "pagado",
-      "estatusViaje": "pendiente",
+      "estatusViaje": "completado",
       "serviceStartTime": null,
       "notas": "",
       "creadoPor": "u1",
-      "creadoEn": "2026-04-07T01:07:02.626Z"
+      "creadoEn": "2026-04-07T01:07:02.626Z",
+      "serviceEndTime": "2026-04-13T21:11:14.224Z"
     },
     {
       "id": "7142d67a-cff1-462b-9822-a195fc815ec2",
@@ -320,11 +325,12 @@
       "horas": 0,
       "metodoPago": "usd",
       "estatusPago": "pagado",
-      "estatusViaje": "pendiente",
+      "estatusViaje": "completado",
       "serviceStartTime": null,
       "notas": "",
       "creadoPor": "u1",
-      "creadoEn": "2026-04-07T02:16:50.815Z"
+      "creadoEn": "2026-04-07T02:16:50.815Z",
+      "serviceEndTime": "2026-04-13T21:11:14.224Z"
     },
     {
       "id": "506ff59e-9e54-42f6-8a23-b8cf779a8b01",
@@ -377,11 +383,12 @@
       "horas": 0,
       "metodoPago": "usd",
       "estatusPago": "pagado",
-      "estatusViaje": "en-camino",
+      "estatusViaje": "completado",
       "serviceStartTime": "2026-04-09T18:25:36.341Z",
       "notas": "",
       "creadoPor": "u1",
-      "creadoEn": "2026-04-09T18:19:30.914Z"
+      "creadoEn": "2026-04-09T18:19:30.914Z",
+      "serviceEndTime": "2026-04-13T21:11:14.224Z"
     },
     {
       "id": "1c0b6102-dbaa-45d8-a88f-1cd517cb6c2d",
@@ -428,9 +435,9 @@
       "driverId": "u3",
       "hora": "03:04",
       "folio": "X01234",
-      "estatusViaje": "pendiente",
+      "estatusViaje": "completado",
       "serviceStartTime": null,
-      "serviceEndTime": null,
+      "serviceEndTime": "2026-04-13T21:11:14.224Z",
       "creadoPor": "u1",
       "creadoEn": "2026-04-06T02:39:54.460Z"
     }

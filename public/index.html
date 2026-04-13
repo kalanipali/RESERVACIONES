@@ -631,6 +631,117 @@
     .filters-bar input:focus, .filters-bar select:focus { border-color: var(--pink); }
     .form-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; max-width: 900px; }
     .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+    /* ═══════════════════════════════════════════
+       MOBILE RESPONSIVE — V2.7
+    ═══════════════════════════════════════════ */
+    #mobileMenuBtn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      padding: 4px 10px;
+      color: var(--text);
+      border-radius: 6px;
+    }
+    #mobileMenuBtn:hover { background: var(--surface2); }
+    #mobileOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    #mobileOverlay.open { display: block; }
+
+    @media (max-width: 768px) {
+      #app { flex-direction: column; height: 100vh; }
+
+      #sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        bottom: 0;
+        z-index: 100;
+        width: 250px;
+        min-width: 250px;
+        transition: left 0.25s ease;
+        box-shadow: none;
+      }
+      #sidebar.open {
+        left: 0;
+        box-shadow: 4px 0 20px rgba(0,0,0,0.2);
+      }
+
+      #topbar { padding: 0 12px; height: 54px; gap: 8px; }
+      #pageTitle { font-size: 14px; flex: 1; }
+      #mobileMenuBtn { display: inline-flex; align-items: center; }
+      #topbarActions .btn { padding: 7px 12px; font-size: 12px; }
+
+      #mainWrapper { flex: 1; overflow: hidden; width: 100%; }
+
+      #viewContainer { padding: 12px; }
+
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+      .stat-card { padding: 14px; }
+      .stat-value { font-size: 18px; }
+      .dash-grid, .dash-grid-3 { grid-template-columns: 1fr; gap: 12px; }
+
+      .form-grid, .form-grid-3 { grid-template-columns: 1fr; gap: 12px; }
+      .form-wrap { padding: 16px; }
+      .form-actions { flex-direction: column-reverse; }
+      .form-actions .btn { width: 100%; justify-content: center; padding: 12px; }
+
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { min-width: 560px; }
+
+      .filters-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+      .filters-bar input,
+      .filters-bar select,
+      .filters-bar button { width: 100%; }
+
+      .trip-card { padding: 14px; }
+      .trip-info-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .trip-actions { flex-direction: column; }
+      .trip-actions .btn { width: 100%; justify-content: center; padding: 12px; font-size: 13px; }
+
+      .booking-list { gap: 8px; }
+      .booking-card { padding: 12px; }
+      .booking-card-row { gap: 6px; }
+
+      #ck-time { font-size: 36px !important; letter-spacing: 1px !important; }
+      #ck-date { font-size: 12px !important; }
+
+      #modalBox {
+        max-height: 95vh;
+        border-radius: 14px 14px 0 0;
+        max-width: 100%;
+      }
+      #modalOverlay { align-items: flex-end; padding: 0; }
+      .detail-grid { grid-template-columns: 1fr; }
+
+      .cal-cell { min-height: 48px; padding: 4px; }
+      .cal-day-num { font-size: 11px; }
+      .cal-day-header { font-size: 9px; padding: 4px 0; }
+
+      #toast { bottom: 12px; right: 12px; left: 12px; max-width: none; }
+
+      .udn-toggle { width: 100%; }
+      .udn-btn { flex: 1; padding: 10px; font-size: 12px; }
+
+      .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+      .driver-override-btns { flex-direction: column !important; }
+      .driver-override-btns button { width: 100% !important; padding: 8px !important; }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .trip-info-grid { grid-template-columns: 1fr; }
+      .booking-meta { font-size: 11px; gap: 8px; }
+      #ck-time { font-size: 30px !important; }
+    }
   </style>
 </head>
 <body>
@@ -660,6 +771,7 @@
 <!-- ══════════════════════════════════════════════════
      MAIN APP
 ══════════════════════════════════════════════════ -->
+<div id="mobileOverlay" onclick="closeMobileMenu()"></div>
 <div id="app" class="hidden">
   <aside id="sidebar">
     <div class="sidebar-logo"><span class="logo-x">X</span>OTICS</div>
@@ -675,6 +787,7 @@
   </aside>
   <div id="mainWrapper">
     <header id="topbar">
+      <button id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Menú">☰</button>
       <h1 id="pageTitle">—</h1>
       <div id="topbarActions"></div>
     </header>
@@ -930,11 +1043,13 @@ function buildNav() {
       { id:'calendario',         icon:'📅',  label:'Calendario'         },
       { id:'reservaciones',      icon:'📋',  label:'Reservaciones'      },
       { id:'estado-drivers',     icon:'🚦',  label:'Estado de Drivers'  },
+      { id:'reloj-checador',     icon:'⏰',  label:'Reloj Checador'     },
     ],
     asesor: [
       { id:'nueva',              icon:'＋',  label:'Nueva Reservación'  },
       { id:'calendario',         icon:'📅',  label:'Calendario'         },
       { id:'reservaciones',      icon:'📋',  label:'Reservaciones'      },
+      { id:'reloj-checador',     icon:'⏰',  label:'Reloj Checador'     },
     ],
     driver: [
       { id:'mis-viajes',         icon:'🗺️', label:'Mis Viajes'         },
@@ -973,7 +1088,24 @@ const PAGE_TITLES = {
   'nuevo-welcome':     'Nuevo Welcome',
 };
 
+// ─── MOBILE MENU ──────────────────────────────────────────────
+function toggleMobileMenu() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('mobileOverlay');
+  if (!sidebar) return;
+  sidebar.classList.toggle('open');
+  if (sidebar.classList.contains('open')) overlay.classList.add('open');
+  else overlay.classList.remove('open');
+}
+function closeMobileMenu() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('mobileOverlay');
+  if (sidebar) sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('open');
+}
+
 function navigate(viewId, opts={}) {
+  closeMobileMenu();
   // Limpiar intervals al salir de las vistas con auto-refresh
   clearInterval(driverStatusInterval); driverStatusInterval = null;
   clearInterval(dashboardInterval);    dashboardInterval    = null;
@@ -2005,23 +2137,66 @@ async function loadDriverStatus() {
     if (!drivers) return;
     const grid = document.getElementById('driversStatusGrid');
     if (!grid) { clearInterval(driverStatusInterval); return; }
+
+    // ORDEN DINÁMICO V2.7:
+    // 1. Drivers disponibles/pendientes/en-hotel ordenados por hora de entrada (primero en checar = primero en lista)
+    // 2. En servicio → al final
+    // 3. No ha checado → al final del todo
+    drivers.sort((a, b) => {
+      const aFin = (a.estado === 'en-servicio') ? 1 : (a.noHaChecado ? 2 : 0);
+      const bFin = (b.estado === 'en-servicio') ? 1 : (b.noHaChecado ? 2 : 0);
+      if (aFin !== bFin) return aFin - bFin;
+      // Mismo grupo: ordenar por hora de entrada
+      if (a.checadaHoraEntrada && b.checadaHoraEntrada) {
+        return a.checadaHoraEntrada.localeCompare(b.checadaHoraEntrada);
+      }
+      if (a.checadaHoraEntrada) return -1;
+      if (b.checadaHoraEntrada) return 1;
+      return (a.nombre || '').localeCompare(b.nombre || '');
+    });
+
     grid.innerHTML = drivers.length === 0
       ? `<div class="empty-state"><div class="empty-icon">🚗</div><p>No hay drivers registrados</p></div>`
-      : drivers.map(d => {
+      : drivers.map((d, idx) => {
           const esServicio  = d.estado === 'en-servicio';
           const esPendiente = d.estado === 'pendiente';
-          const statusColor = esServicio ? 'var(--blue)' : esPendiente ? 'var(--yellow)' : 'var(--green)';
-          const statusTxt   = esServicio ? 'En Servicio' : esPendiente ? 'Próximo Servicio' : 'Disponible';
-          const statusDot   = esServicio ? 'blue' : esPendiente ? 'yellow' : 'green';
+          const esEnHotel   = d.estado === 'en-hotel';
+          const esNoChecado = d.estado === 'no-checado' || d.noHaChecado;
+          const statusColor = esServicio  ? 'var(--blue)'
+                            : esPendiente ? 'var(--yellow)'
+                            : esEnHotel   ? 'var(--pink)'
+                            : esNoChecado ? 'var(--text-muted)'
+                            : 'var(--green)';
+          const statusTxt   = esServicio  ? 'En Servicio'
+                            : esPendiente ? 'Próximo Servicio'
+                            : esEnHotel   ? 'En Hotel'
+                            : esNoChecado ? 'No Ha Checado'
+                            : 'Disponible';
+          const statusDot   = esServicio  ? 'en-camino'
+                            : esPendiente ? 'pendiente'
+                            : esEnHotel   ? 'en-hotel'
+                            : esNoChecado ? 'no-show'
+                            : 'completado';
+          // Hora de entrada legible
+          let horaEntrada = '';
+          if (d.checadaHoraEntrada) {
+            try {
+              horaEntrada = new Date(d.checadaHoraEntrada).toLocaleTimeString('es-MX', {
+                timeZone: 'America/Cancun', hour:'2-digit', minute:'2-digit', hour12:false
+              });
+            } catch(_) {}
+          }
           return `
           <div class="card" style="border-left:3px solid ${statusColor}">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-              <div style="width:42px;height:42px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--pink)">
+              <div style="min-width:24px;height:24px;border-radius:50%;background:var(--pink-glow);color:var(--pink);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0" title="Posición en orden operativo">${idx+1}</div>
+              <div style="width:42px;height:42px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--pink);flex-shrink:0">
                 ${d.nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
               </div>
-              <div>
+              <div style="flex:1;min-width:0">
                 <div style="font-weight:600;font-size:14px">${d.nombre}</div>
                 <span class="badge badge-${statusDot}" style="font-size:11px">${statusTxt}</span>
+                ${horaEntrada ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px">⏰ Entrada: ${horaEntrada}</div>` : ''}
               </div>
             </div>
             ${esServicio ? `
@@ -2037,13 +2212,22 @@ async function loadDriverStatus() {
                 ${d.destino ? `<div style="font-size:12px;color:var(--text-muted)">📍 ${d.destino}</div>` : ''}
                 ${d.refId ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">ID ${d.refId}</div>` : ''}
               </div>` : ''}
+            ${esEnHotel ? `
+              <div style="background:rgba(234,20,129,.06);border-radius:8px;padding:10px 12px">
+                <div style="font-size:11px;color:var(--pink)">🏨 Driver reportado en hotel</div>
+              </div>` : ''}
+            ${esNoChecado ? `
+              <div style="background:rgba(107,114,128,.08);border-radius:8px;padding:10px 12px">
+                <div style="font-size:11px;color:var(--text-muted)">⚠️ Sin registro de entrada hoy</div>
+              </div>` : ''}
             ${['admin_unico','admin','coordinador'].includes(S.user.rol) ? `
             <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
               <div style="font-size:10px;color:var(--text-muted);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Override manual</div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <div class="driver-override-btns" style="display:flex;gap:6px;flex-wrap:wrap">
                 <button class="btn btn-sm" style="font-size:11px;padding:4px 8px;background:rgba(37,99,235,.1);color:var(--blue);border:1px solid rgba(37,99,235,.2);border-radius:6px" onclick="overrideDriverEstado('${d.id}','en-servicio')">🚗 En Servicio</button>
-                <button class="btn btn-sm" style="font-size:11px;padding:4px 8px;background:rgba(22,163,74,.1);color:var(--green);border:1px solid rgba(22,163,74,.2);border-radius:6px" onclick="overrideDriverEstado('${d.id}','disponible')">✅ Finalizado</button>
+                <button class="btn btn-sm" style="font-size:11px;padding:4px 8px;background:rgba(22,163,74,.1);color:var(--green);border:1px solid rgba(22,163,74,.2);border-radius:6px" onclick="overrideDriverEstado('${d.id}','disponible')">✅ Disponible</button>
                 <button class="btn btn-sm" style="font-size:11px;padding:4px 8px;background:rgba(234,20,129,.08);color:var(--pink);border:1px solid rgba(234,20,129,.2);border-radius:6px" onclick="overrideDriverEstado('${d.id}','en-hotel')">🏨 En Hotel</button>
+                <button class="btn btn-sm" style="font-size:11px;padding:4px 8px;background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);border-radius:6px" onclick="overrideDriverEstado('${d.id}','')" title="Quitar override">↺ Limpiar</button>
               </div>
             </div>` : ''}
           </div>`;
@@ -2053,11 +2237,13 @@ async function loadDriverStatus() {
 
 async function overrideDriverEstado(driverId, estado) {
   try {
-    await PUT(`/api/drivers/${driverId}/estado`, { manualEstado: estado });
-    const labels = { 'en-servicio':'En Servicio', 'disponible':'Disponible / Finalizado', 'en-hotel':'En Hotel' };
-    showToast(`Estado actualizado: ${labels[estado] || estado}`, 'success');
+    // Si estado está vacío, enviar null para limpiar el override
+    const payload = { manualEstado: estado || null };
+    await PUT(`/api/drivers/${driverId}/estado`, payload);
+    const labels = { 'en-servicio':'En Servicio', 'disponible':'Disponible', 'en-hotel':'En Hotel', '':'Override limpiado' };
+    showToast(`Estado actualizado: ${labels[estado] ?? estado}`, 'success');
     await loadDriverStatus();
-  } catch(e) { showToast('Error actualizando estado','error'); }
+  } catch(e) { showToast('Error actualizando estado: ' + (e.message||''),'error'); }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2141,7 +2327,10 @@ function tripCard(b) {
             ${esOrigenHotel(b)?`
             <button class="btn btn-sm" style="background:rgba(234,20,129,.15);color:var(--pink);border:1px solid rgba(234,20,129,.3);font-weight:700" onclick="updateTripStatus('${b.id}','en-hotel')">
               🏨 EN EL HOTEL
-            </button>` : ''}` : ''}
+            </button>` : ''}
+            <button class="btn btn-sm" style="background:rgba(22,163,74,.15);color:var(--green);border:1px solid rgba(22,163,74,.3);font-weight:700" onclick="yaEnElHotel('${b.id}','booking')">
+              🏨 YA EN EL HOTEL
+            </button>` : ''}
           <button class="btn btn-danger btn-sm" onclick="updateTripStatus('${b.id}','no-show')">❌ No Show</button>
         </div>`:''}
     </div>`;
@@ -2174,6 +2363,9 @@ function welcomeTripCard(w) {
             <button class="btn btn-success btn-sm" style="font-weight:700;letter-spacing:.5px" onclick="updateTripStatus('${w.id}','completado','welcome')">
               ✅ SERVICIO FINALIZADO
             </button>
+            <button class="btn btn-sm" style="background:rgba(22,163,74,.15);color:var(--green);border:1px solid rgba(22,163,74,.3);font-weight:700" onclick="yaEnElHotel('${w.id}','welcome')">
+              🏨 YA EN EL HOTEL
+            </button>
             <button class="btn btn-danger btn-sm" onclick="updateTripStatus('${w.id}','no-show','welcome')">❌ No Show</button>` : ''}
         </div>` : ''}
     </div>`;
@@ -2181,11 +2373,38 @@ function welcomeTripCard(w) {
 
 async function updateTripStatus(id, status, type='booking') {
   try {
+    // V2.7 — Si iniciando un nuevo servicio (en-camino), auto-completar cualquier servicio activo anterior
+    if (status === 'en-camino') {
+      try {
+        const [allBks, allWels] = await Promise.all([GET('/api/bookings'), GET('/api/welcomes')]);
+        const activos = [
+          ...((allBks||[]).filter(b => b.estatusViaje === 'en-camino' && b.id !== id).map(b => ({...b, _t:'booking'}))),
+          ...((allWels||[]).filter(w => w.estatusViaje === 'en-camino' && w.id !== id).map(w => ({...w, _t:'welcome'})))
+        ];
+        for (const prev of activos) {
+          const prevUrl = prev._t === 'welcome' ? `/api/welcomes/${prev.id}` : `/api/bookings/${prev.id}`;
+          try { await PUT(prevUrl, { estatusViaje: 'completado' }); } catch(_) {}
+        }
+      } catch(_) {}
+    }
     const apiUrl = type === 'welcome' ? `/api/welcomes/${id}` : `/api/bookings/${id}`;
     await PUT(apiUrl, { estatusViaje: status });
     showToast(`Estatus actualizado: ${statusLabel(status)}`, 'success');
     await loadMisViajes();
   } catch(e) { showToast(e.message,'error'); }
+}
+
+// V2.7 — "YA EN EL HOTEL": completa el servicio actual y marca al driver como disponible
+async function yaEnElHotel(id, type='booking') {
+  try {
+    const apiUrl = type === 'welcome' ? `/api/welcomes/${id}` : `/api/bookings/${id}`;
+    // 1. Completar el servicio actual
+    await PUT(apiUrl, { estatusViaje: 'completado' });
+    // 2. Marcar al driver como disponible (sincroniza con Estado de Drivers y sistema de asignación)
+    try { await POST('/api/drivers/me/disponible', {}); } catch(_) {}
+    showToast('🏨 Ya en el hotel — Estado: Disponible', 'success');
+    await loadMisViajes();
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 // ════════════════════════════════════════════════════════════
