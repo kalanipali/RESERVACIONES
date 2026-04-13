@@ -10,20 +10,20 @@
        VARIABLES & RESET
     ═══════════════════════════════════════════ */
     :root {
-      --bg:        #0a0a0a;
-      --surface:   #141414;
-      --surface2:  #1e1e1e;
-      --surface3:  #282828;
-      --border:    #2a2a2a;
+      --bg:        #f0f2f6;
+      --surface:   #ffffff;
+      --surface2:  #f5f6fa;
+      --surface3:  #eaecf1;
+      --border:    #dde1ea;
       --pink:      #ea1481;
       --pink-dark: #c01070;
-      --pink-glow: rgba(234,20,129,0.15);
-      --text:      #f0f0f0;
-      --text-muted:#888;
-      --green:     #22c55e;
-      --yellow:    #f59e0b;
-      --red:       #ef4444;
-      --blue:      #3b82f6;
+      --pink-glow: rgba(234,20,129,0.08);
+      --text:      #111827;
+      --text-muted:#6b7280;
+      --green:     #16a34a;
+      --yellow:    #d97706;
+      --red:       #dc2626;
+      --blue:      #2563eb;
       --sidebar-w: 250px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -43,9 +43,9 @@
        SCROLLBAR
     ═══════════════════════════════════════════ */
     ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--surface); }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #444; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: #c4c9d6; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a8afc0; }
 
     /* ═══════════════════════════════════════════
        LOGIN SCREEN
@@ -65,7 +65,7 @@
       padding: 48px 40px;
       width: 100%;
       max-width: 400px;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.10);
     }
     .login-logo {
       font-size: 36px;
@@ -134,6 +134,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.04);
     }
     .sidebar-logo {
       padding: 24px 20px 20px;
@@ -299,6 +300,15 @@
     .badge-pago-pendiente  { background: rgba(245,158,11,0.12); color: var(--yellow); }
     .badge-pago-pagado     { background: rgba(34,197,94,0.12);  color: var(--green); }
     .badge-pago-por-cobrar { background: rgba(59,130,246,0.12); color: var(--blue); }
+    .badge-en-hotel        { background: rgba(234,20,129,0.10); color: var(--pink); }
+
+    /* UDN selector toggle */
+    .udn-toggle { display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:24px; }
+    .udn-btn { padding:9px 20px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all .15s;font-family:inherit; }
+    .udn-btn.hotel-active  { background:var(--pink);color:#fff; }
+    .udn-btn.welcome-active{ background:#06b6d4;color:#fff; }
+    .udn-btn.inactive      { background:var(--surface2);color:var(--text-muted); }
+    .udn-btn.inactive:hover{ background:var(--surface3); }
 
     /* ═══════════════════════════════════════════
        FORM ELEMENTS
@@ -454,7 +464,7 @@
       flex-direction: column;
       gap: 4px;
     }
-    .cal-cell:hover { background: var(--surface2); border-color: #444; }
+    .cal-cell:hover { background: var(--surface2); border-color: #b0b8cc; }
     .cal-cell.empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
     .cal-cell.today { border-color: var(--pink); }
     .cal-cell.selected { background: var(--pink-glow); border-color: var(--pink); }
@@ -536,7 +546,7 @@
     ═══════════════════════════════════════════ */
     #modalOverlay {
       position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.4);
       display: flex; align-items: center; justify-content: center;
       z-index: 1000;
       padding: 20px;
@@ -578,7 +588,7 @@
     ═══════════════════════════════════════════ */
     #toast {
       position: fixed; bottom: 24px; right: 24px;
-      background: var(--surface2);
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 12px 18px;
@@ -586,7 +596,7 @@
       font-weight: 500;
       z-index: 9999;
       max-width: 320px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
       animation: slideIn .25s ease;
     }
     .toast-success { border-left: 3px solid var(--green); }
@@ -897,38 +907,38 @@ function buildNav() {
 
   const menus = {
     admin_unico: [
-      { id:'dashboard',       icon:'📊', label:'Dashboard'         },
-      { id:'calendario',      icon:'📅', label:'Calendario'        },
-      { id:'reservaciones',   icon:'📋', label:'Reservaciones'     },
-      { id:'nueva',           icon:'＋', label:'Nueva Reservación'  },
-      { id:'welcome',         icon:'🎫', label:'Welcome'           },
-      { id:'estado-drivers',  icon:'🚦', label:'Estado de Drivers' },
-      { id:'usuarios',        icon:'👥', label:'Usuarios'          },
-      { id:'vehiculos',       icon:'🚗', label:'Vehículos'         },
+      { id:'nueva',              icon:'＋',  label:'Nueva Reservación'  },
+      { id:'dashboard',          icon:'📊',  label:'Dashboard'          },
+      { id:'calendario',         icon:'📅',  label:'Calendario'         },
+      { id:'reservaciones',      icon:'📋',  label:'Reservaciones'      },
+      { id:'estado-drivers',     icon:'🚦',  label:'Estado de Drivers'  },
+      { id:'recursos-humanos',   icon:'👔',  label:'Recursos Humanos'   },
+      { id:'usuarios',           icon:'👥',  label:'Usuarios'           },
+      { id:'vehiculos',          icon:'🚗',  label:'Vehículos'          },
     ],
     admin: [
-      { id:'dashboard',       icon:'📊', label:'Dashboard'         },
-      { id:'calendario',      icon:'📅', label:'Calendario'        },
-      { id:'reservaciones',   icon:'📋', label:'Reservaciones'     },
-      { id:'nueva',           icon:'＋', label:'Nueva Reservación'  },
-      { id:'welcome',         icon:'🎫', label:'Welcome'           },
-      { id:'estado-drivers',  icon:'🚦', label:'Estado de Drivers' },
-      { id:'usuarios',        icon:'👥', label:'Usuarios'          },
+      { id:'nueva',              icon:'＋',  label:'Nueva Reservación'  },
+      { id:'dashboard',          icon:'📊',  label:'Dashboard'          },
+      { id:'calendario',         icon:'📅',  label:'Calendario'         },
+      { id:'reservaciones',      icon:'📋',  label:'Reservaciones'      },
+      { id:'estado-drivers',     icon:'🚦',  label:'Estado de Drivers'  },
+      { id:'recursos-humanos',   icon:'👔',  label:'Recursos Humanos'   },
+      { id:'usuarios',           icon:'👥',  label:'Usuarios'           },
     ],
     coordinador: [
-      { id:'calendario',      icon:'📅', label:'Calendario'        },
-      { id:'reservaciones',   icon:'📋', label:'Reservaciones'     },
-      { id:'nueva',           icon:'＋', label:'Nueva Reservación'  },
-      { id:'welcome',         icon:'🎫', label:'Welcome'           },
-      { id:'estado-drivers',  icon:'🚦', label:'Estado de Drivers' },
+      { id:'nueva',              icon:'＋',  label:'Nueva Reservación'  },
+      { id:'calendario',         icon:'📅',  label:'Calendario'         },
+      { id:'reservaciones',      icon:'📋',  label:'Reservaciones'      },
+      { id:'estado-drivers',     icon:'🚦',  label:'Estado de Drivers'  },
     ],
     asesor: [
-      { id:'calendario',      icon:'📅', label:'Calendario'        },
-      { id:'reservaciones',   icon:'📋', label:'Reservaciones'     },
-      { id:'nueva',           icon:'＋', label:'Nueva Reservación'  },
+      { id:'nueva',              icon:'＋',  label:'Nueva Reservación'  },
+      { id:'calendario',         icon:'📅',  label:'Calendario'         },
+      { id:'reservaciones',      icon:'📋',  label:'Reservaciones'      },
     ],
     driver: [
-      { id:'mis-viajes',      icon:'🗺️', label:'Mis Viajes'        },
+      { id:'mis-viajes',         icon:'🗺️', label:'Mis Viajes'         },
+      { id:'reloj-checador',     icon:'⏰',  label:'Reloj Checador'     },
     ],
   };
 
@@ -953,18 +963,21 @@ const PAGE_TITLES = {
   calendario:        'Calendario',
   reservaciones:     'Reservaciones',
   nueva:             'Nueva Reservación',
-  'mis-viajes':      'Mis Viajes',
-  'estado-drivers':  'Estado de Drivers',
-  usuarios:          'Gestión de Usuarios',
-  vehiculos:         'Flota de Vehículos',
-  welcome:           'Welcome',
-  'nuevo-welcome':   'Nuevo Welcome',
+  'mis-viajes':        'Mis Viajes',
+  'estado-drivers':    'Estado de Drivers',
+  'reloj-checador':    'Reloj Checador',
+  'recursos-humanos':  'Recursos Humanos',
+  usuarios:            'Gestión de Usuarios',
+  vehiculos:           'Flota de Vehículos',
+  welcome:             'Welcome',
+  'nuevo-welcome':     'Nuevo Welcome',
 };
 
 function navigate(viewId, opts={}) {
   // Limpiar intervals al salir de las vistas con auto-refresh
   clearInterval(driverStatusInterval); driverStatusInterval = null;
   clearInterval(dashboardInterval);    dashboardInterval    = null;
+  clearInterval(_clockInterval);       _clockInterval       = null;
 
   S.currentView = viewId;
   setActiveNav(viewId);
@@ -978,9 +991,11 @@ function navigate(viewId, opts={}) {
     'mis-viajes':      renderMisViajes,
     'estado-drivers':  renderEstadoDrivers,
     usuarios:          renderUsuarios,
-    vehiculos:         renderVehiculos,
-    welcome:           renderWelcome,
-    'nuevo-welcome':   () => renderWelcomeForm(null),
+    vehiculos:           renderVehiculos,
+    welcome:             renderWelcome,
+    'nuevo-welcome':     () => renderWelcomeForm(null),
+    'reloj-checador':    renderRelojChecador,
+    'recursos-humanos':  renderRecursosHumanos,
   };
   (renders[viewId] || (() => {}))();
 }
@@ -1361,6 +1376,7 @@ async function renderReservaciones() {
       <input type="text" id="filterBuscar" placeholder="🔍 ID, nombre, apellido o email…"
         oninput="applyFilters()" style="min-width:200px;flex:1">
       <button class="btn btn-secondary btn-sm" onclick="clearFilters()">Limpiar</button>
+      ${['admin_unico','admin'].includes(S.user.rol) ? `<button class="btn btn-secondary btn-sm" onclick="downloadCsv()" title="Exportar vista actual a CSV">📥 CSV</button>` : ''}
     </div>
     <div id="resList"><div style="color:var(--text-muted);font-size:13px">Cargando…</div></div>`;
   await applyFilters();
@@ -1413,6 +1429,8 @@ async function applyFilters() {
       return da.localeCompare(db);
     });
 
+    S.filteredItems = items; // store for CSV export
+
     const list = document.getElementById('resList');
     if (!list) return;
     list.innerHTML = items.length === 0
@@ -1439,6 +1457,59 @@ function clearFilters() {
   applyFilters();
 }
 
+function downloadCsv() {
+  const items = S.filteredItems || [];
+  if (!items.length) { showToast('No hay datos para exportar', 'error'); return; }
+
+  const esc = v => {
+    const s = (v === null || v === undefined) ? '' : String(v);
+    return s.includes(',') || s.includes('"') || s.includes('\n')
+      ? '"' + s.replace(/"/g, '""') + '"'
+      : s;
+  };
+
+  const hotelHeaders = ['Tipo','ID','Fecha','Hora','Nombre','Teléfono','Email','Origen','Destino','Servicio','Pasajeros','Vuelo','Vehículo','Driver','Precio','Método Pago','Estatus Pago','Estatus Viaje','Notas'];
+  const welcomeHeaders = ['Tipo','ID','Fecha','Hora','Nombre','Destino','No. Invitación','Costo','Driver','Folio','Estatus'];
+
+  // Use hotel headers as base; welcomes fill matching columns
+  const allHeaders = ['Tipo','ID','Fecha','Hora','Nombre','Teléfono','Email','Origen','Destino','Servicio','Pasajeros','Vuelo','Vehículo','Driver','Precio/Costo','Método Pago','Estatus Pago','Estatus Viaje','Notas','No. Invitación','Folio'];
+
+  const rows = items.map(item => {
+    if (item._type === 'welcome') {
+      return [
+        'WELCOME', item.welcomeId||'', item.fecha||'', item.hora||'',
+        item.nombre||'', '', '', '', item.destino||'',
+        '', '', '', '', item.driverNombre||item.driverId||'',
+        item.costo||0, '', '', item.estatusViaje||'',
+        '', item.numeroInvitacion||'', item.folio||''
+      ];
+    } else {
+      return [
+        'HOTEL', item.bookingId||'', item.fecha||'', item.hora||'',
+        item.huespedNombre||'', item.huespedTelefono||'', item.huespedEmail||'',
+        item.origen||'', item.destino||'', item.tipoServicio||'',
+        item.pasajeros||'', item.numeroVuelo||'',
+        item.vehiculoNombre||item.vehiculoTipo||'', item.driverNombre||'',
+        item.precio||0, item.metodoPago||'', item.estatusPago||'',
+        item.estatusViaje||'', item.notas||'', '', ''
+      ];
+    }
+  });
+
+  const csvContent = [allHeaders, ...rows].map(row => row.map(esc).join(',')).join('\r\n');
+  const bom = '\uFEFF'; // UTF-8 BOM for Excel
+  const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  const fi = document.getElementById('filterFechaInicio')?.value || today();
+  const ff = document.getElementById('filterFechaFin')?.value   || today();
+  link.download = `reservaciones_${fi}_${ff}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+  showToast(`Exportando ${items.length} registros ✅`, 'success');
+}
+
 // ════════════════════════════════════════════════════════════
 //  BOOKING CARD COMPONENT
 // ════════════════════════════════════════════════════════════
@@ -1450,15 +1521,18 @@ function bookingCard(b, clickable=true) {
         <span class="booking-guest">${b.huespedNombre||'Sin nombre'} <span style="color:var(--text-muted);font-size:11px;font-weight:400">#${b.bookingId||'—'}</span></span>
         <span class="booking-time">${b.hora||'--:--'}</span>
         ${badge(b.estatusViaje)}
+        <button class="btn btn-sm" style="font-size:12px;padding:3px 8px;background:#25D366;color:#fff;border:none;border-radius:6px;cursor:pointer;margin-left:4px" onclick="event.stopPropagation();openWhatsappMsg(${JSON.stringify(b).replace(/"/g,'&quot;')})">📱</button>
       </div>
       <div class="booking-meta">
         <span>📍 ${b.origenTipo||b.origen||'—'} → ${b.destino||'—'}</span>
         <span>🚗 ${b.vehiculoNombre||'—'}</span>
         <span>👤 ${b.driverNombre||'Sin asignar'}</span>
         <span>👥 ${b.pasajeros} pax</span>
+        ${b.habitacion?`<span>🛏 Hab. ${b.habitacion}</span>`:''}
         ${b.numeroVuelo?`<span>✈️ ${b.numeroVuelo}</span>`:''}
         <span class="booking-price">${fmxn(b.precio)}</span>
       </div>
+      ${b.creadoPorNombre&&b.creadoPorNombre!=='—'?`<div style="font-size:11px;color:var(--text-muted);margin-top:4px">Creado por: ${b.creadoPorNombre}</div>`:''}
     </div>`;
 }
 
@@ -1481,8 +1555,11 @@ async function openBookingDetail(id) {
         <div class="detail-item"><label>Vehículo</label><p>${b.vehiculoNombre||'—'}</p></div>
         <div class="detail-item"><label>Driver</label><p>${b.driverNombre||'Sin asignar'}</p></div>
         <div class="detail-item"><label>No. de Vuelo</label><p>${b.numeroVuelo||'—'}</p></div>
+        <div class="detail-item"><label>Habitación</label><p>${b.habitacion||'—'}</p></div>
         <div class="detail-item"><label>Teléfono</label><p>${b.huespedTelefono||b.huespedContacto||'—'}</p></div>
         <div class="detail-item"><label>Email</label><p>${b.huespedEmail||'—'}</p></div>
+        ${b.referido?`<div class="detail-item"><label>Referido</label><p>${b.referido}</p></div>`:''}
+        <div class="detail-item"><label>Creado por</label><p>${b.creadoPorNombre||'—'}</p></div>
         <div class="detail-item"><label>Método de Pago</label><p>${metodoLabel(b.metodoPago)}</p></div>
         <div class="detail-item"><label>Precio</label><p style="font-size:18px;font-weight:800;color:var(--pink)">${fmxn(b.precio)}</p></div>
         <div class="detail-item"><label>Estatus de Pago</label><p>${badgePago(b.estatusPago)}</p></div>
@@ -1519,15 +1596,116 @@ async function deleteBooking(id) {
   } catch(e) { showToast(e.message,'error'); }
 }
 
+function openWhatsappMsg(b) {
+  const driver = b.driverNombre && b.driverNombre !== 'Sin asignar' ? b.driverNombre : 'Pendiente';
+  const msg = [
+    `🚗 ${b.fecha||'—'} 🚗`,
+    `${b.huespedNombre||'—'}`,
+    `#PAX: ${b.pasajeros||1}`,
+    `Habitación: ${b.habitacion||'—'}`,
+    `Origen: ${b.origenTipo||b.origen||'—'}`,
+    `Destino: ${b.destino||'—'}`,
+    `Salida: ${b.hora||'—'}`,
+    `OP: ${driver}`,
+    `ID: ${b.bookingId||'—'}`,
+    `Tel: ${b.huespedTelefono||'—'}`,
+  ].join('\n');
+
+  openModal(`
+    <div class="modal-title">📱 Mensaje WhatsApp</div>
+    <textarea id="wa-msg" style="width:100%;min-height:200px;font-family:monospace;font-size:13px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);resize:none;line-height:1.6" readonly>${msg}</textarea>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
+      <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+      <button class="btn btn-primary" onclick="
+        navigator.clipboard.writeText(document.getElementById('wa-msg').value)
+          .then(()=>showToast('Copiado al portapapeles ✅','success'))
+          .catch(()=>{ document.getElementById('wa-msg').select(); document.execCommand('copy'); showToast('Copiado ✅','success'); });
+      ">📋 Copiar al portapapeles</button>
+    </div>`);
+}
+
 // ════════════════════════════════════════════════════════════
 //  VIEW: BOOKING FORM (Create / Edit)
 // ════════════════════════════════════════════════════════════
+function switchUdn(mode) {
+  S.udnMode = mode;
+  renderBookingForm(null, S._prefillDate || null);
+}
+
+function _renderWelcomeInBookingForm() {
+  const vc = document.getElementById('viewContainer');
+  const driverOptions = `<option value="">Sin asignar</option>` + S.drivers.map(d =>
+    `<option value="${d.id}">${d.nombre}</option>`
+  ).join('');
+  vc.innerHTML = `
+    <div class="form-wrap">
+      <div class="udn-toggle">
+        <button class="udn-btn inactive" onclick="switchUdn('hotel')">🏨 HOTEL</button>
+        <button class="udn-btn welcome-active" onclick="switchUdn('welcome')">🎫 WELCOME</button>
+      </div>
+      <h2 style="font-size:16px;font-weight:700;margin-bottom:20px">🎫 Nueva Welcome</h2>
+      <p class="form-section-title">Datos del Registro</p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre del Huésped *</label>
+          <input type="text" id="wf-nombre" placeholder="Nombre completo">
+        </div>
+        <div class="form-group">
+          <label>Fecha *</label>
+          <input type="date" id="wf-fecha" value="${S._prefillDate||today()}">
+        </div>
+        <div class="form-group">
+          <label>Hora</label>
+          <input type="time" id="wf-hora">
+        </div>
+        <div class="form-group">
+          <label># Invitación</label>
+          <input type="text" id="wf-invitacion" placeholder="Número de invitación">
+        </div>
+        <div class="form-group">
+          <label>Destino</label>
+          <input type="text" id="wf-destino" placeholder="Destino del servicio">
+        </div>
+        <div class="form-group">
+          <label>Costo (MXN)</label>
+          <input type="number" id="wf-costo" value="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>Driver Asignado</label>
+          <select id="wf-driver">${driverOptions}</select>
+        </div>
+        <div class="form-group">
+          <label>Folio (XO + dígitos)</label>
+          <input type="text" id="wf-folio" placeholder="XO-1234">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" onclick="navigate('calendario')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveWelcome(null)">✅ Crear Welcome</button>
+      </div>
+    </div>`;
+}
+
 async function renderBookingForm(editId=null, prefillDate=null) {
   editId = editId || null;
-  // Check if opts were passed via navigate
   const vc = document.getElementById('viewContainer');
   vc.innerHTML = `<div style="color:var(--text-muted)">Preparando formulario…</div>`;
   document.getElementById('topbarActions').innerHTML = '';
+
+  const canSeeWelcome = ['admin_unico','admin','coordinador'].includes(S.user.rol);
+
+  // UDN mode logic: edits + calendar prefill always hotel
+  if (editId || prefillDate) {
+    S.udnMode = 'hotel';
+  } else if (!S.udnMode) {
+    S.udnMode = 'hotel';
+  }
+  if (!editId) S._prefillDate = prefillDate; // Remember for UDN switching
+
+  // If welcome mode, render welcome inline form
+  if (canSeeWelcome && !editId && S.udnMode === 'welcome') {
+    return _renderWelcomeInBookingForm();
+  }
 
   let existingBooking = null;
   if (editId) {
@@ -1535,10 +1713,16 @@ async function renderBookingForm(editId=null, prefillDate=null) {
   }
 
   const b = existingBooking || {};
-  const canAssign = ['admin_unico','admin','coordinador'].includes(S.user.rol);
-  const vehicleOptions = S.vehicles.map(v =>
-    `<option value="${v.id}" data-tipo="${v.tipo}" ${b.vehiculoId===v.id?'selected':''}>${v.nombre}</option>`
-  ).join('');
+  const canAssign = canSeeWelcome;
+
+  // Vehicle TYPE options only (Sedan, Minivan, Van, Suburban)
+  const savedTipo = b.vehiculoTipo || '';
+  const vehicleTypeOptions = `<option value="">— Tipo de vehículo —</option>
+    <option value="sedan"    ${savedTipo==='sedan'   ?'selected':''}>Sedan (1–3 Pax)</option>
+    <option value="minivan"  ${savedTipo==='minivan' ?'selected':''}>Minivan (1–5 Pax)</option>
+    <option value="van"      ${savedTipo==='van'||savedTipo==='van8'||savedTipo==='van13'?'selected':''}>Van / Urvan</option>
+    <option value="suburban" ${savedTipo==='suburban'?'selected':''}>Suburban (1–5 Pax)</option>`;
+
   const conductorOptions = `<option value="">Sin asignar</option>` + S.drivers.map(c =>
     `<option value="${c.id}" ${b.driverId===c.id?'selected':''}>${c.nombre}</option>`
   ).join('');
@@ -1559,6 +1743,11 @@ async function renderBookingForm(editId=null, prefillDate=null) {
 
   vc.innerHTML = `
     <div class="form-wrap">
+      ${canSeeWelcome && !editId ? `
+      <div class="udn-toggle">
+        <button class="udn-btn hotel-active"  onclick="switchUdn('hotel')">🏨 HOTEL</button>
+        <button class="udn-btn inactive"       onclick="switchUdn('welcome')">🎫 WELCOME</button>
+      </div>` : ''}
       <h2 style="font-size:16px;font-weight:700;margin-bottom:20px">
         ${editId ? '✏️ Editar Reservación' : '＋ Nueva Reservación'}
       </h2>
@@ -1576,6 +1765,14 @@ async function renderBookingForm(editId=null, prefillDate=null) {
         <div class="form-group form-group-full">
           <label>Correo Electrónico *</label>
           <input type="email" id="f-email" value="${b.huespedEmail||''}" placeholder="huesped@email.com" required>
+        </div>
+        <div class="form-group">
+          <label>Habitación *</label>
+          <input type="text" id="f-habitacion" value="${b.habitacion||''}" placeholder="Ej: 412">
+        </div>
+        <div class="form-group">
+          <label>Referido</label>
+          <input type="text" id="f-referido" value="${b.referido||''}" placeholder="Nombre de quien refirió">
         </div>
       </div>
 
@@ -1640,7 +1837,7 @@ async function renderBookingForm(editId=null, prefillDate=null) {
       <div class="form-grid">
         <div class="form-group">
           <label>Vehículo</label>
-          <select id="f-vehiculo" onchange="recalcPrice()"><option value="">— Seleccionar —</option>${vehicleOptions}</select>
+          <select id="f-vehiculo" onchange="recalcPrice()">${vehicleTypeOptions}</select>
         </div>
         <div class="form-group">
           <label>Driver Asignado</label>
@@ -1714,8 +1911,8 @@ function onTipoChange() {
 function recalcPrice() {
   const tipo     = document.getElementById('f-tipo')?.value;
   const vSelect  = document.getElementById('f-vehiculo');
-  const selectedOpt = vSelect?.options[vSelect.selectedIndex];
-  const vTipo    = selectedOpt?.dataset?.tipo || '';
+  const vRaw     = vSelect?.value || '';
+  const vTipo    = vRaw === 'van' ? 'van8' : vRaw;
   const destino  = tipo==='por-horas'
     ? document.getElementById('f-destino-text')?.value || ''
     : document.getElementById('f-destino')?.value || '';
@@ -1738,7 +1935,7 @@ async function saveBooking(editId=null) {
   const tipo    = document.getElementById('f-tipo')?.value;
   const nombre  = document.getElementById('f-nombre')?.value?.trim();
   const fecha   = document.getElementById('f-fecha')?.value;
-  const vehiculoId = document.getElementById('f-vehiculo')?.value;
+  const vehiculoTipo = document.getElementById('f-vehiculo')?.value || '';
 
   if (!nombre) { showToast('Nombre del huésped requerido','error'); return; }
   if (!fecha)  { showToast('Fecha requerida','error'); return; }
@@ -1755,6 +1952,8 @@ async function saveBooking(editId=null) {
     huespedNombre:   nombre,
     huespedTelefono: document.getElementById('f-telefono')?.value||'',
     huespedEmail:    document.getElementById('f-email')?.value||'',
+    habitacion:      document.getElementById('f-habitacion')?.value?.trim()||'',
+    referido:        document.getElementById('f-referido')?.value?.trim()||'',
     tipoServicio:    tipo,
     origenTipo,
     origen:          origenFinal,
@@ -1763,7 +1962,8 @@ async function saveBooking(editId=null) {
     hora:            document.getElementById('f-hora')?.value||'',
     pasajeros:       parseInt(document.getElementById('f-pasajeros')?.value)||1,
     numeroVuelo:     document.getElementById('f-vuelo')?.value||'',
-    vehiculoId:      document.getElementById('f-vehiculo')?.value||'',
+    vehiculoId:      '',
+    vehiculoTipo:    vehiculoTipo,
     driverId:        document.getElementById('f-conductor')?.value||'',
     precio:          parseFloat(document.getElementById('f-precio')?.value)||0,
     horas:           tipo==='por-horas' ? parseInt(document.getElementById('f-horas')?.value)||3 : 0,
@@ -1837,9 +2037,27 @@ async function loadDriverStatus() {
                 ${d.destino ? `<div style="font-size:12px;color:var(--text-muted)">📍 ${d.destino}</div>` : ''}
                 ${d.refId ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">ID ${d.refId}</div>` : ''}
               </div>` : ''}
+            ${['admin_unico','admin','coordinador'].includes(S.user.rol) ? `
+            <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
+              <div style="font-size:10px;color:var(--text-muted);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Override manual</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="btn btn-sm" style="font-size:11px;padding:4px 8px;background:rgba(37,99,235,.1);color:var(--blue);border:1px solid rgba(37,99,235,.2);border-radius:6px" onclick="overrideDriverEstado('${d.id}','en-servicio')">🚗 En Servicio</button>
+                <button class="btn btn-sm" style="font-size:11px;padding:4px 8px;background:rgba(22,163,74,.1);color:var(--green);border:1px solid rgba(22,163,74,.2);border-radius:6px" onclick="overrideDriverEstado('${d.id}','disponible')">✅ Finalizado</button>
+                <button class="btn btn-sm" style="font-size:11px;padding:4px 8px;background:rgba(234,20,129,.08);color:var(--pink);border:1px solid rgba(234,20,129,.2);border-radius:6px" onclick="overrideDriverEstado('${d.id}','en-hotel')">🏨 En Hotel</button>
+              </div>
+            </div>` : ''}
           </div>`;
         }).join('');
   } catch(e) { /* silencioso */ }
+}
+
+async function overrideDriverEstado(driverId, estado) {
+  try {
+    await PUT(`/api/drivers/${driverId}/estado`, { manualEstado: estado });
+    const labels = { 'en-servicio':'En Servicio', 'disponible':'Disponible / Finalizado', 'en-hotel':'En Hotel' };
+    showToast(`Estado actualizado: ${labels[estado] || estado}`, 'success');
+    await loadDriverStatus();
+  } catch(e) { showToast('Error actualizando estado','error'); }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2104,7 +2322,7 @@ async function renderWelcomeForm(editId=null) {
         </div>
       </div>
       <div class="form-actions">
-        <button class="btn btn-secondary" onclick="navigate('welcome')">Cancelar</button>
+        <button class="btn btn-secondary" onclick="navigate('reservaciones')">Cancelar</button>
         <button class="btn btn-primary" onclick="saveWelcome(${editId?`'${editId}'`:null})">
           ${editId ? '💾 Guardar Cambios' : '✅ Crear Welcome'}
         </button>
@@ -2123,6 +2341,19 @@ async function saveWelcome(editId=null) {
   const folio    = document.getElementById('wf-folio')?.value?.trim()     || '';
   if (!nombre) { showToast('Nombre requerido','error'); return; }
   if (!fecha)  { showToast('Fecha requerida','error');  return; }
+
+  // Validar duplicados de folio y número de invitación
+  try {
+    const todos = (await GET('/api/welcomes')) || [];
+    const otros = editId ? todos.filter(w => w.id !== editId) : todos;
+    if (folio && otros.some(w => w.folio && w.folio.toLowerCase() === folio.toLowerCase())) {
+      showToast('❌ El folio ya existe en otro registro Welcome', 'error'); return;
+    }
+    if (invit && otros.some(w => w.numeroInvitacion && w.numeroInvitacion === invit)) {
+      showToast('❌ El número de invitación ya existe en otro registro Welcome', 'error'); return;
+    }
+  } catch(e) { /* si falla la verificación, continuar */ }
+
   const body = { nombre, fecha, hora, numeroInvitacion:invit, destino, costo, driverId, folio };
   try {
     if (editId) {
@@ -2132,7 +2363,7 @@ async function saveWelcome(editId=null) {
       await POST('/api/welcomes', body);
       showToast('Welcome creado ✅','success');
     }
-    navigate('welcome');
+    navigate('reservaciones');
   } catch(e) { showToast(e.message,'error'); }
 }
 
@@ -2279,7 +2510,7 @@ async function renderVehiculos() {
   vc.innerHTML = `
     <div class="card">
       <div style="margin-bottom:12px;color:var(--text-muted);font-size:13px">
-        Haz clic en <strong>Editar Placa</strong> para actualizar la información de cada vehículo.
+        Haz clic en <strong>Editar</strong> para actualizar la información de cada vehículo.
       </div>
       <div class="table-wrap">
         <table>
@@ -2293,7 +2524,7 @@ async function renderVehiculos() {
               <td>${v.capacidad} pax</td>
               <td id="placa-${v.id}">${v.placa||'<span style="color:var(--text-muted)">Sin placa</span>'}</td>
               <td><div class="td-actions">
-                <button class="btn btn-secondary btn-sm" onclick="editVehiculo('${v.id}','${v.nombre}','${v.placa||''}')">✏️ Editar Placa</button>
+                <button class="btn btn-secondary btn-sm" onclick="editVehiculo('${v.id}','${v.nombre}','${v.tipo||''}','${v.capacidad||''}','${v.placa||''}')">✏️ Editar</button>
               </div></td>
             </tr>`).join('')}
           </tbody>
@@ -2302,12 +2533,33 @@ async function renderVehiculos() {
     </div>`;
 }
 
-function editVehiculo(id, nombre, placa) {
+function editVehiculo(id, nombre, tipo, capacidad, placa) {
+  const tipoSel = t => t === tipo ? 'selected' : '';
   openModal(`
-    <div class="modal-title">🚗 ${nombre}</div>
-    <div class="form-group" style="margin-bottom:20px">
-      <label>Número de Placa</label>
-      <input type="text" id="vm-placa" value="${placa}" placeholder="Ej: QOO-12-34" style="text-transform:uppercase">
+    <div class="modal-title">🚗 Editar Vehículo</div>
+    <div class="form-grid" style="margin-bottom:16px">
+      <div class="form-group">
+        <label>Nombre del Vehículo</label>
+        <input type="text" id="vm-nombre" value="${nombre}" placeholder="Ej: Suburban Negra">
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="vm-tipo">
+          <option value="sedan"    ${tipoSel('sedan')}>Sedan</option>
+          <option value="minivan"  ${tipoSel('minivan')}>Minivan</option>
+          <option value="van"      ${tipoSel('van')||tipoSel('van8')||tipoSel('van13')}>Van / Urvan</option>
+          <option value="suburban" ${tipoSel('suburban')}>Suburban</option>
+          <option value="sprinter" ${tipoSel('sprinter')}>Sprinter</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Capacidad (pax)</label>
+        <input type="number" id="vm-capacidad" value="${capacidad||''}" min="1" max="50" placeholder="Ej: 6">
+      </div>
+      <div class="form-group">
+        <label>Número de Placa</label>
+        <input type="text" id="vm-placa" value="${placa}" placeholder="Ej: QOO-12-34" style="text-transform:uppercase">
+      </div>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
@@ -2316,13 +2568,323 @@ function editVehiculo(id, nombre, placa) {
 }
 
 async function saveVehiculo(id) {
-  const placa = document.getElementById('vm-placa')?.value?.trim().toUpperCase();
+  const nombre    = document.getElementById('vm-nombre')?.value?.trim();
+  const tipo      = document.getElementById('vm-tipo')?.value || '';
+  const capacidad = parseInt(document.getElementById('vm-capacidad')?.value) || 0;
+  const placa     = document.getElementById('vm-placa')?.value?.trim().toUpperCase();
+  if (!nombre) { showToast('Nombre requerido','error'); return; }
   try {
-    await PUT(`/api/vehicles/${id}`, { placa });
-    showToast('Placa actualizada ✅','success');
+    await PUT(`/api/vehicles/${id}`, { nombre, tipo, capacidad, placa });
+    showToast('Vehículo actualizado ✅','success');
     closeModal();
     renderVehiculos();
   } catch(e) { showToast(e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  VIEW: RELOJ CHECADOR (Driver)
+// ════════════════════════════════════════════════════════════
+let _clockInterval = null;
+
+async function renderRelojChecador() {
+  document.getElementById('topbarActions').innerHTML = '';
+  const vc = document.getElementById('viewContainer');
+
+  vc.innerHTML = `
+    <div style="max-width:480px;margin:0 auto">
+
+      <!-- Reloj en vivo -->
+      <div class="card" style="text-align:center;padding:28px 24px;margin-bottom:16px">
+        <div id="ck-time" style="font-size:48px;font-weight:900;color:var(--text);letter-spacing:2px;font-variant-numeric:tabular-nums">--:--:--</div>
+        <div id="ck-date" style="font-size:14px;color:var(--text-muted);margin-top:4px">—</div>
+        <div id="ck-loc"  style="font-size:11px;color:var(--text-muted);margin-top:6px">📍 Obteniendo ubicación…</div>
+      </div>
+
+      <!-- Botones -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <button id="btn-entrada" class="btn" style="padding:20px;font-size:16px;font-weight:800;background:var(--green);color:#fff;border:none;border-radius:12px;cursor:pointer" onclick="registrarChecada('ENTRADA')">
+          ✅ ENTRADA
+        </button>
+        <button id="btn-salida" class="btn" style="padding:20px;font-size:16px;font-weight:800;background:var(--red);color:#fff;border:none;border-radius:12px;cursor:pointer" onclick="registrarChecada('SALIDA')">
+          🚪 SALIDA
+        </button>
+      </div>
+
+      <!-- Historial reciente -->
+      <div class="card">
+        <p style="font-size:12px;font-weight:700;color:var(--pink);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Mis registros recientes</p>
+        <div id="ck-historial"><div style="color:var(--text-muted);font-size:13px">Cargando…</div></div>
+      </div>
+    </div>`;
+
+  // Reloj en vivo
+  clearInterval(_clockInterval);
+  function tickClock() {
+    const now  = new Date();
+    const opts = { timeZone:'America/Cancun', hour12:false };
+    const hora = now.toLocaleTimeString('es-MX', { ...opts, hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const fecha= now.toLocaleDateString('es-MX', { ...opts, weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    const el = document.getElementById('ck-time');
+    const ef = document.getElementById('ck-date');
+    if (el) el.textContent = hora;
+    if (ef) ef.textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+  }
+  tickClock();
+  _clockInterval = setInterval(tickClock, 1000);
+
+  // Intentar obtener GPS
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+        S._ckLat = lat; S._ckLng = lng; S._ckAccuracy = accuracy;
+        const el = document.getElementById('ck-loc');
+        if (el) el.textContent = `📍 GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)} (±${Math.round(accuracy)}m)`;
+      },
+      () => {
+        S._ckLat = null; S._ckLng = null; S._ckAccuracy = null;
+        const el = document.getElementById('ck-loc');
+        if (el) el.textContent = '📍 Ubicación no disponible (se registrará solo IP)';
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  } else {
+    S._ckLat = null; S._ckLng = null;
+    const el = document.getElementById('ck-loc');
+    if (el) el.textContent = '📍 GPS no soportado en este dispositivo';
+  }
+
+  // Cargar historial
+  await _loadChecadasDriver();
+}
+
+async function _loadChecadasDriver() {
+  const box = document.getElementById('ck-historial');
+  if (!box) return;
+  try {
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Cancun' });
+    const all   = (await GET('/api/checadas')) || [];
+    const lista = all.filter(c => c.fecha === todayStr); // Solo hoy
+    if (!lista.length) { box.innerHTML = `<div style="color:var(--text-muted);font-size:13px">Sin registros hoy</div>`; return; }
+    box.innerHTML = lista.slice(0, 20).map(c => {
+      const esEntrada = c.tipo === 'ENTRADA';
+      const color     = esEntrada ? 'var(--green)' : 'var(--red)';
+      const icon      = esEntrada ? '✅' : '🚪';
+
+      // Badge de validación
+      let badge = '';
+      if (c.validacionEstado === 'valida') {
+        badge = `<span style="display:inline-block;background:#d4edda;color:#155724;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:6px">✔ En zona</span>`;
+      } else if (c.validacionEstado === 'fuera_de_zona') {
+        const dist = c.distanciaKm != null ? ` (${c.distanciaKm.toFixed(2)} km)` : '';
+        badge = `<span style="display:inline-block;background:#f8d7da;color:#721c24;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:6px">✖ Fuera de zona${dist}</span>`;
+      } else {
+        badge = `<span style="display:inline-block;background:#f0f0f0;color:#888;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:6px">Sin GPS</span>`;
+      }
+
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="display:flex;align-items:center">
+              <span style="font-size:13px;font-weight:700;color:${color}">${icon} ${c.tipo}</span>
+              ${badge}
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${c.fecha} • ${c.hora}</div>
+            ${c.lat != null
+              ? `<div style="font-size:10px;color:var(--text-muted)">📍 ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}</div>`
+              : '<div style="font-size:10px;color:var(--text-muted)">📍 Sin GPS</div>'}
+          </div>
+          <span style="font-size:11px;color:var(--text-muted)">${c.ip}</span>
+        </div>`;
+    }).join('');
+  } catch(e) { if (box) box.innerHTML = `<div style="color:var(--red);font-size:13px">Error cargando historial</div>`; }
+}
+
+async function registrarChecada(tipo) {
+  // ── GPS REQUERIDO ────────────────────────────────────────────
+  if (S._ckLat == null || S._ckLng == null) {
+    showToast('📍 Se requiere GPS activo para registrar. Activa la ubicación en tu dispositivo y espera unos segundos.', 'error');
+    return;
+  }
+
+  const btnE = document.getElementById('btn-entrada');
+  const btnS = document.getElementById('btn-salida');
+  if (btnE) btnE.disabled = true;
+  if (btnS) btnS.disabled = true;
+
+  // Reverse geocode (Nominatim, sin API key)
+  let locationStr = null;
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${S._ckLat}&lon=${S._ckLng}&format=json`);
+    const j = await r.json();
+    locationStr = j.display_name || null;
+  } catch(_) {}
+
+  try {
+    const result = await POST('/api/checadas', {
+      tipo,
+      lat:      S._ckLat,
+      lng:      S._ckLng,
+      accuracy: S._ckAccuracy ?? null,
+      locationStr
+    });
+
+    // Toast con resultado de validación de zona
+    let msg = tipo === 'ENTRADA' ? '✅ Entrada registrada' : '🚪 Salida registrada';
+    if (result.validacionEstado === 'valida') {
+      msg += ' — ✔ En zona';
+    } else if (result.validacionEstado === 'fuera_de_zona') {
+      const dist = result.distanciaKm != null ? ` (${result.distanciaKm.toFixed(2)} km del punto)` : '';
+      msg += ` — ✖ Fuera de zona${dist}`;
+    }
+    showToast(msg, 'success');
+    await _loadChecadasDriver();
+  } catch(e) {
+    // Mostrar mensaje del servidor si hay (doble entrada, sin GPS, etc.)
+    const msg = e.serverMsg || e.message || 'Error desconocido';
+    showToast('⚠️ ' + msg, 'error');
+  } finally {
+    if (btnE) btnE.disabled = false;
+    if (btnS) btnS.disabled = false;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  VIEW: RECURSOS HUMANOS (Admin / Admin_Unico)
+// ════════════════════════════════════════════════════════════
+// Haversine distance in km
+function _haversineKm(lat1, lng1, lat2, lng2) {
+  const R   = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a   = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+async function renderRecursosHumanos() {
+  document.getElementById('topbarActions').innerHTML = '';
+  const vc = document.getElementById('viewContainer');
+  vc.innerHTML = `
+    <div class="filters-bar" style="flex-wrap:wrap;gap:8px;margin-bottom:12px">
+      <input type="date" id="rrhh-fi" value="${today()}" onchange="loadRecursosHumanos()">
+      <span style="align-self:center;color:var(--text-muted);font-size:12px">–</span>
+      <input type="date" id="rrhh-ff" value="${today()}" onchange="loadRecursosHumanos()">
+      <select id="rrhh-driver" onchange="loadRecursosHumanos()" style="min-width:160px">
+        <option value="">Todos los drivers</option>
+        ${(S.drivers||[]).map(d=>`<option value="${d.id}">${d.nombre}</option>`).join('')}
+      </select>
+      <select id="rrhh-tipo" onchange="loadRecursosHumanos()">
+        <option value="">Entrada y Salida</option>
+        <option value="ENTRADA">Solo Entradas</option>
+        <option value="SALIDA">Solo Salidas</option>
+      </select>
+    </div>
+    <div id="rrhh-config" style="font-size:12px;color:var(--text-muted);margin-bottom:8px">📍 Cargando ubicación esperada…</div>
+    <div id="rrhh-lista"><div style="color:var(--text-muted)">Cargando…</div></div>`;
+
+  // Cargar config de ubicación
+  try {
+    const cfg = await GET('/api/checadas/config');
+    S._ckConfig = cfg;
+    const cfgEl = document.getElementById('rrhh-config');
+    if (cfgEl && cfg) cfgEl.innerHTML = `📍 <strong>Ubicación esperada:</strong> ${cfg.nombre} (radio ${cfg.radiusKm} km)`;
+  } catch(_) {}
+
+  await loadRecursosHumanos();
+}
+
+async function loadRecursosHumanos() {
+  const lista  = document.getElementById('rrhh-lista');
+  if (!lista) return;
+  lista.innerHTML = `<div style="color:var(--text-muted)">Cargando…</div>`;
+
+  const fi      = document.getElementById('rrhh-fi')?.value  || '';
+  const ff      = document.getElementById('rrhh-ff')?.value  || '';
+  const drFil   = document.getElementById('rrhh-driver')?.value || '';
+  const tipoFil = document.getElementById('rrhh-tipo')?.value  || '';
+  const cfg     = S._ckConfig || null;
+
+  try {
+    let registros = (await GET('/api/checadas')) || [];
+    if (fi)     registros = registros.filter(c => c.fecha >= fi);
+    if (ff)     registros = registros.filter(c => c.fecha <= ff);
+    if (drFil)  registros = registros.filter(c => c.driverId === drFil);
+    if (tipoFil)registros = registros.filter(c => c.tipo === tipoFil);
+
+    if (!registros.length) {
+      lista.innerHTML = `<div class="empty-state"><div class="empty-icon">⏰</div><p>Sin registros para los filtros seleccionados</p></div>`;
+      return;
+    }
+
+    // Contar alertas para mostrar resumen
+    const nAlertas = registros.filter(c => c.alertaBuddyPunch).length;
+    const alertaResumen = nAlertas > 0
+      ? `<div style="background:#fff3cd;border:1px solid #ffc107;color:#856404;padding:10px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;font-weight:600">
+           🚨 ${nAlertas} registro${nAlertas > 1 ? 's' : ''} con posible ingreso compartido (misma IP, distintos drivers en &lt;10 min)
+         </div>`
+      : '';
+
+    lista.innerHTML = alertaResumen + `
+      <div class="card" style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Driver</th>
+            <th>Tipo</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>IP</th>
+            <th>Ubicación GPS</th>
+            <th>Validación</th>
+          </tr></thead>
+          <tbody>
+            ${registros.map(c => {
+              const esEntrada = c.tipo === 'ENTRADA';
+
+              // Validación: usar dato guardado en el servidor; fallback a cálculo local
+              let validacion = '';
+              let estado     = c.validacionEstado || null;
+              let dist       = c.distanciaKm      != null ? c.distanciaKm : null;
+
+              // Fallback para registros antiguos sin validacionEstado
+              if (!estado && c.lat != null && c.lng != null && cfg) {
+                dist   = _haversineKm(c.lat, c.lng, cfg.lat, cfg.lng);
+                estado = dist <= cfg.radiusKm ? 'valida' : 'fuera_de_zona';
+              } else if (!estado && c.lat == null) {
+                estado = 'sin_gps';
+              }
+
+              if (estado === 'valida') {
+                const d = dist != null ? ` (${dist.toFixed(2)} km)` : '';
+                validacion = `<span style="display:inline-flex;align-items:center;gap:4px;background:#d4edda;color:#155724;font-weight:700;font-size:12px;padding:3px 10px;border-radius:20px">✔ En zona${d}</span>`;
+              } else if (estado === 'fuera_de_zona') {
+                const d = dist != null ? ` (${dist.toFixed(2)} km)` : '';
+                validacion = `<span style="display:inline-flex;align-items:center;gap:4px;background:#f8d7da;color:#721c24;font-weight:700;font-size:12px;padding:3px 10px;border-radius:20px">✖ Fuera de zona${d}</span>`;
+              } else {
+                validacion = `<span style="display:inline-flex;align-items:center;gap:4px;background:#f0f0f0;color:#888;font-size:12px;padding:3px 10px;border-radius:20px">📵 Sin GPS</span>`;
+              }
+
+              const gpsCell = c.lat != null
+                ? `<span style="font-size:11px">${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}<br><span style="color:var(--text-muted)">${c.locationStr ? c.locationStr.substring(0,45)+'…' : ''}</span></span>`
+                : `<span style="color:var(--text-muted);font-size:12px">—</span>`;
+
+              const buddyFlag = c.alertaBuddyPunch
+                ? `<span title="Misma IP que otro driver en menos de 10 min" style="margin-left:6px;cursor:help">🚨</span>`
+                : '';
+
+              return `<tr${c.alertaBuddyPunch ? ' style="background:#fff8e1"' : ''}>
+                <td><strong>${c.nombre}</strong>${buddyFlag}</td>
+                <td><span style="font-weight:700;color:${esEntrada?'var(--green)':'var(--red)'}">${esEntrada?'✅':'🚪'} ${c.tipo}</span></td>
+                <td>${c.fecha}</td>
+                <td style="font-variant-numeric:tabular-nums">${c.hora}</td>
+                <td style="font-size:11px;color:var(--text-muted)">${c.ip}</td>
+                <td>${gpsCell}</td>
+                <td>${validacion}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) { lista.innerHTML = `<div style="color:var(--red)">Error cargando registros</div>`; }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2376,7 +2938,7 @@ async function initApp() {
   // Navigate to default view for role
   const defaultView = {
     admin_unico: 'dashboard', admin: 'dashboard',
-    coordinador: 'calendario', asesor: 'calendario',
+    coordinador: 'nueva', asesor: 'nueva',
     driver: 'mis-viajes'
   };
   navigate(defaultView[S.user.rol]||'calendario');

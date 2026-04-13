@@ -4,14 +4,42 @@
 // ============================================================
 
 const http   = require('http');
+const https  = require('https');
 const fs     = require('fs');
 const path   = require('path');
 const crypto = require('crypto');
 const url    = require('url');
 
+// ─── CARGAR .env ─────────────────────────────────────────────
+try {
+  const envPath = path.join(__dirname, '.env');
+  fs.readFileSync(envPath, 'utf8').split('\n').forEach(line => {
+    const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '').trim();
+  });
+} catch (_) {}
+
 const PORT      = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
 const PUBLIC    = path.join(__dirname, 'public');
+
+// ─── UBICACIÓN ESPERADA (Reloj Checador) ─────────────────────
+// Coordenadas del punto central de trabajo (configurable)
+const EXPECTED_LAT           = 20.588859;
+const EXPECTED_LNG           = -87.112130;
+const EXPECTED_RADIUS_KM     = 0.60;     // 600 metros de radio
+const EXPECTED_LOCATION_NAME = 'Playa del Carmen – Xotics Transportation';
+
+// ─── HAVERSINE (distancia entre dos puntos GPS en km) ────────
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R    = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a    = Math.sin(dLat/2)**2
+             + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180)
+             * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 // ─── HELPERS ────────────────────────────────────────────────
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
@@ -75,7 +103,9 @@ function initData() {
     ],
     bookings: [],
     welcomeCounter: 0,
-    welcomes: []
+    welcomes: [],
+    checadaCounter: 0,
+    checadas: []
   };
   writeData(d); return d;
 }
@@ -161,13 +191,22 @@ function parseBody(req) {
 }
 
 // ─── ENRICH BOOKING ──────────────────────────────────────────
+const _TIPO_DISP = {
+  sedan:'Sedan', minivan:'Minivan', van:'Van / Urvan',
+  van8:'Van / Urvan', van13:'Van / Urvan (13)', suburban:'Suburban', sprinter:'Sprinter'
+};
 function enrich(b, data) {
-  const v = data.vehicles.find(v => v.id === b.vehiculoId);
-  const c = data.users.find(u => u.id === b.driverId);
+  const v       = data.vehicles.find(v => v.id === b.vehiculoId);
+  const c       = data.users.find(u => u.id === b.driverId);
+  const creator = data.users.find(u => u.id === b.creadoPor);
+  const vehiculoNombre = v
+    ? v.nombre
+    : (_TIPO_DISP[b.vehiculoTipo] || _TIPO_DISP[b.vehiculoId] || 'Sin vehículo');
   return {
     ...b,
-    vehiculoNombre: v ? v.nombre : 'Sin vehículo',
-    driverNombre:   c ? c.nombre : 'Sin asignar'
+    vehiculoNombre,
+    driverNombre:    c       ? c.nombre       : 'Sin asignar',
+    creadoPorNombre: creator ? creator.nombre : '—'
   };
 }
 
@@ -179,6 +218,140 @@ function serveStatic(res, filePath) {
     const mime = MIME[ext] || 'application/octet-stream';
     res.writeHead(200, { 'Content-Type': mime });
     res.end(data);
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// EMAIL — Resend API (nativo, sin dependencias npm)
+// ════════════════════════════════════════════════════════════
+function buildConfirmationEmail(b) {
+  const TIPO_LABEL = { traslado:'Traslado', tour:'Tour', 'por-horas':'Por Horas' };
+  const fmt  = (v, fallback='—') => (v !== undefined && v !== null && String(v).trim() !== '') ? String(v).trim() : fallback;
+  const fmxn = v => new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(parseFloat(v)||0);
+
+  const tipoLabel = TIPO_LABEL[b.tipoServicio] || fmt(b.tipoServicio);
+  const vuelo     = fmt(b.numeroVuelo, null);
+  const notas     = fmt(b.notas, null);
+
+  const rowStyle   = 'display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid #eaecf1;font-size:14px;';
+  const labelStyle = 'color:#6b7280;font-weight:600;min-width:150px;flex-shrink:0;';
+  const valStyle   = 'color:#111827;text-align:right;font-weight:500;';
+  const row = (label, value) =>
+    `<div style="${rowStyle}"><span style="${labelStyle}">${label}</span><span style="${valStyle}">${value}</span></div>`;
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Confirmación de Reservación</title></head>
+<body style="margin:0;padding:0;background:#f0f2f6;font-family:'Helvetica Neue',Arial,sans-serif;">
+<div style="max-width:600px;margin:40px auto;padding:0 16px 40px;">
+
+  <!-- HEADER -->
+  <div style="background:#ea1481;border-radius:14px 14px 0 0;padding:32px 36px;text-align:center;">
+    <div style="font-size:30px;font-weight:900;letter-spacing:4px;color:#fff;">XOTICS</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.80);letter-spacing:3px;text-transform:uppercase;margin-top:4px;">Transportation</div>
+    <div style="margin-top:18px;background:rgba(255,255,255,0.18);border-radius:8px;padding:10px 20px;display:inline-block;">
+      <span style="color:#fff;font-size:15px;font-weight:700;">Reservacion Confirmada</span>
+    </div>
+  </div>
+
+  <!-- BOOKING ID -->
+  <div style="background:#fff;border-left:4px solid #ea1481;border-right:4px solid #ea1481;padding:20px 36px;text-align:center;">
+    <div style="color:#6b7280;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Numero de Reservacion</div>
+    <div style="font-size:36px;font-weight:900;color:#ea1481;letter-spacing:6px;margin-top:4px;">#${fmt(b.bookingId)}</div>
+  </div>
+
+  <!-- GREETING -->
+  <div style="background:#fff;border-left:4px solid #ea1481;border-right:4px solid #ea1481;padding:0 36px 20px;">
+    <p style="font-size:15px;color:#111827;margin:0;">
+      Hola <strong>${fmt(b.huespedNombre)}</strong>, tu reservacion ha sido registrada exitosamente.
+      A continuacion encontraras el resumen de tu servicio.
+    </p>
+  </div>
+
+  <!-- DETAILS CARD -->
+  <div style="background:#fff;border-radius:0 0 14px 14px;padding:24px 36px 30px;border:1px solid #dde1ea;border-top:none;">
+
+    <p style="font-size:12px;font-weight:700;color:#ea1481;letter-spacing:2px;text-transform:uppercase;margin:0 0 4px;">Detalles del Servicio</p>
+    ${row('Tipo de Servicio', tipoLabel)}
+    ${row('Fecha', fmt(b.fecha))}
+    ${row('Hora', fmt(b.hora))}
+    ${row('Origen', fmt(b.origen))}
+    ${row('Destino', fmt(b.destino))}
+    ${row('No. de Pasajeros', fmt(b.pasajeros))}
+    ${vuelo ? row('No. de Vuelo', vuelo) : ''}
+
+    <p style="font-size:12px;font-weight:700;color:#ea1481;letter-spacing:2px;text-transform:uppercase;margin:20px 0 4px;">Asignacion</p>
+    ${row('Driver Asignado', fmt(b.driverNombre, 'Por asignar'))}
+    ${row('Vehiculo', fmt(b.vehiculoNombre || b.vehiculoTipo, 'Por asignar'))}
+
+    <p style="font-size:12px;font-weight:700;color:#ea1481;letter-spacing:2px;text-transform:uppercase;margin:20px 0 4px;">Precio</p>
+    <div style="background:#fdf3f9;border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+      <span style="font-size:13px;color:#6b7280;font-weight:600;">Total a pagar</span>
+      <span style="font-size:22px;font-weight:900;color:#ea1481;">${fmxn(b.precio)}</span>
+    </div>
+
+    ${notas ? `
+    <p style="font-size:12px;font-weight:700;color:#ea1481;letter-spacing:2px;text-transform:uppercase;margin:20px 0 4px;">Notas Especiales</p>
+    <div style="background:#f5f6fa;border-radius:8px;padding:12px 16px;font-size:13px;color:#374151;">${notas}</div>` : ''}
+
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid #eaecf1;text-align:center;">
+      <p style="font-size:14px;color:#374151;margin:0 0 6px;">
+        Gracias por elegir <strong style="color:#ea1481;">Xotics Transportation</strong>.
+      </p>
+      <p style="font-size:12px;color:#9ca3af;margin:0;">
+        Si tienes alguna pregunta sobre tu servicio, no dudes en contactarnos.
+      </p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>`;
+}
+
+// ─── Resend REST API ─────────────────────────────────────────
+function sendConfirmationEmail(booking) {
+  const apiKey   = process.env.RESEND_API_KEY;
+  const fromAddr = process.env.RESEND_FROM || 'Xotics Transportation <onboarding@resend.dev>';
+
+  if (!apiKey) { console.warn('[email] RESEND_API_KEY no configurada — correo omitido.'); return; }
+  if (!booking.huespedEmail) { console.warn('[email] Sin email del huesped — correo omitido.'); return; }
+
+  const payload = JSON.stringify({
+    from:    fromAddr,
+    to:      [booking.huespedEmail],
+    subject: `✅ Confirmacion de tu reservacion #${booking.bookingId} - Xotics Transportation`,
+    html:    buildConfirmationEmail(booking)
+  });
+
+  const options = {
+    hostname: 'api.resend.com',
+    path:     '/emails',
+    method:   'POST',
+    headers: {
+      'Authorization':  `Bearer ${apiKey}`,
+      'Content-Type':   'application/json',
+      'Content-Length': Buffer.byteLength(payload)
+    }
+  };
+
+  // Fire-and-forget — no bloquea la respuesta al frontend
+  setImmediate(() => {
+    const req = https.request(options, (r) => {
+      let body = '';
+      r.on('data', d => body += d);
+      r.on('end', () => {
+        if (r.statusCode >= 200 && r.statusCode < 300) {
+          console.log(`[email] ✅ Confirmacion enviada a ${booking.huespedEmail} (reservacion #${booking.bookingId})`);
+        } else {
+          console.error(`[email] ❌ Error Resend ${r.statusCode}:`, body);
+        }
+      });
+    });
+    req.on('error', e => console.error('[email] ❌ Error de red:', e.message));
+    req.write(payload);
+    req.end();
   });
 }
 
@@ -289,9 +462,12 @@ const server = http.createServer(async (req, res) => {
         fecha:           body.fecha            || '',
         hora:            body.hora             || '',
         pasajeros:       parseInt(body.pasajeros)  || 1,
+        habitacion:      body.habitacion       || '',
+        referido:        body.referido         || '',
         numeroVuelo:     body.numeroVuelo      || '',
-        vehiculoId:      CAN_ASSIGN.includes(rol) ? (body.vehiculoId || '') : '',
-        driverId:        CAN_ASSIGN.includes(rol) ? (body.driverId   || '') : '',
+        vehiculoId:      CAN_ASSIGN.includes(rol) ? (body.vehiculoId  || '') : '',
+        vehiculoTipo:    CAN_ASSIGN.includes(rol) ? (body.vehiculoTipo|| '') : '',
+        driverId:        CAN_ASSIGN.includes(rol) ? (body.driverId    || '') : '',
         precio:          parseFloat(body.precio)   || 0,
         horas:           parseInt(body.horas)      || 0,
         metodoPago:      body.metodoPago       || '',
@@ -304,7 +480,10 @@ const server = http.createServer(async (req, res) => {
       };
       data.bookings.push(booking);
       writeData(data);
-      return json(res, enrich(booking, data), 201);
+      const enriched = enrich(booking, data);
+      json(res, enriched, 201);                    // Responder al frontend primero
+      sendConfirmationEmail(enriched);             // Email en background (no bloquea)
+      return;
     }
 
     // PUT /api/bookings/:id — editar reservación
@@ -330,7 +509,8 @@ const server = http.createServer(async (req, res) => {
           pasajeros: parseInt(body.pasajeros)   || prev.pasajeros,
           horas:     parseInt(body.horas)       || prev.horas,
           // Asesor no puede asignar driver/vehículo
-          vehiculoId: CAN_ASSIGN.includes(rol) ? (body.vehiculoId ?? prev.vehiculoId) : prev.vehiculoId,
+          vehiculoId:   CAN_ASSIGN.includes(rol) ? (body.vehiculoId   ?? prev.vehiculoId)   : prev.vehiculoId,
+          vehiculoTipo: CAN_ASSIGN.includes(rol) ? (body.vehiculoTipo ?? prev.vehiculoTipo) : prev.vehiculoTipo,
           driverId:   CAN_ASSIGN.includes(rol) ? (body.driverId   ?? prev.driverId)   : prev.driverId,
         };
       } else {
@@ -398,11 +578,27 @@ const server = http.createServer(async (req, res) => {
           estado  = 'pendiente';
           refId   = proximos.bookingId || proximos.welcomeId || null;
           destino = proximos.destino || null;
+        } else if (d.manualEstado) {
+          // Override manual (solo aplica si no hay estado natural)
+          estado = d.manualEstado;
         }
 
         return { id:d.id, nombre:d.nombre, estado, minutos, refId, destino };
       });
       return json(res, result);
+    }
+
+    // PUT /api/drivers/:id/estado — override manual de estado (solo admins/coordinador)
+    const driverEstadoMatch = pathname.match(/^\/api\/drivers\/([^/]+)\/estado$/);
+    if (driverEstadoMatch && method === 'PUT') {
+      if (!['admin_unico','admin','coordinador'].includes(rol)) return err(res, 'Sin permiso', 403);
+      const data  = readData();
+      const uIdx  = data.users.findIndex(u => u.id === driverEstadoMatch[1] && u.rol === 'driver');
+      if (uIdx === -1) return err(res, 'Driver no encontrado', 404);
+      const nuevoEstado = body.manualEstado || null; // null = limpiar override
+      data.users[uIdx] = { ...data.users[uIdx], manualEstado: nuevoEstado };
+      writeData(data);
+      return json(res, { ok:true, manualEstado: nuevoEstado });
     }
 
     // GET /api/conductores (compatibilidad — devuelve drivers)
@@ -592,6 +788,113 @@ const server = http.createServer(async (req, res) => {
       data.vehicles[idx] = { ...data.vehicles[idx], ...body, id: vmatch[1] };
       writeData(data);
       return json(res, data.vehicles[idx]);
+    }
+
+    // ── RELOJ CHECADOR ────────────────────────────────────────
+
+    // GET /api/checadas/config — devuelve la ubicación esperada
+    if (pathname === '/api/checadas/config' && method === 'GET') {
+      return json(res, {
+        lat:       EXPECTED_LAT,
+        lng:       EXPECTED_LNG,
+        radiusKm:  EXPECTED_RADIUS_KM,
+        nombre:    EXPECTED_LOCATION_NAME
+      });
+    }
+
+    // POST /api/checadas — registrar entrada/salida (solo driver)
+    if (pathname === '/api/checadas' && method === 'POST') {
+      if (rol !== 'driver') return err(res, 'Sin permiso', 403);
+
+      // ── 1. GPS REQUERIDO ─────────────────────────────────────
+      const ckLat = typeof body.lat === 'number' ? body.lat : null;
+      const ckLng = typeof body.lng === 'number' ? body.lng : null;
+      if (ckLat === null || ckLng === null) {
+        return err(res, 'Se requiere ubicación GPS para registrar la checada. Activa la ubicación en tu dispositivo.', 400);
+      }
+
+      const data = readData();
+      if (!Array.isArray(data.checadas)) data.checadas = [];
+
+      // ── 2. BLOQUEAR DOBLE ENTRADA ────────────────────────────
+      const tipoSolicitado = body.tipo === 'SALIDA' ? 'SALIDA' : 'ENTRADA';
+      const todayFecha = cancunDateStr(); // YYYY-MM-DD en zona Cancún
+      const checadasHoyDriver = data.checadas
+        .filter(c => c.driverId === sess.userId && c.fecha === todayFecha)
+        .sort((a, b) => b.creadoEn.localeCompare(a.creadoEn));
+      const ultimaTipo = checadasHoyDriver.length ? checadasHoyDriver[0].tipo : null;
+
+      if (tipoSolicitado === 'ENTRADA' && ultimaTipo === 'ENTRADA') {
+        return err(res, 'Ya tienes una ENTRADA activa hoy. Registra tu SALIDA primero.', 409);
+      }
+      if (tipoSolicitado === 'SALIDA' && ultimaTipo !== 'ENTRADA') {
+        return err(res, 'No tienes una ENTRADA activa hoy para registrar SALIDA.', 409);
+      }
+
+      // ── 3. CAPTURAR IP ───────────────────────────────────────
+      const rawIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+                  || req.socket?.remoteAddress
+                  || 'desconocida';
+      const clientIp = rawIp.replace(/^::ffff:/, '');
+
+      // ── 4. DETECTAR BUDDY PUNCH (misma IP, distinto driver, últimos 10 min) ──
+      const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const alertaBuddyPunch = data.checadas.some(c =>
+        c.ip === clientIp &&
+        c.driverId !== sess.userId &&
+        c.creadoEn >= tenMinAgo
+      );
+
+      // ── 5. CALCULAR DISTANCIA Y VALIDACIÓN ──────────────────
+      const distanciaKm   = haversineKm(ckLat, ckLng, EXPECTED_LAT, EXPECTED_LNG);
+      const dentroDeZona  = distanciaKm <= EXPECTED_RADIUS_KM;
+      const validacionEstado = dentroDeZona ? 'valida' : 'fuera_de_zona';
+
+      // ── 6. CONSTRUIR Y GUARDAR ───────────────────────────────
+      if (typeof data.checadaCounter !== 'number') data.checadaCounter = 0;
+      data.checadaCounter += 1;
+
+      const user      = data.users.find(u => u.id === sess.userId);
+      const cancunNow = new Intl.DateTimeFormat('es-MX', {
+        timeZone: 'America/Cancun',
+        year:'numeric', month:'2-digit', day:'2-digit',
+        hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+      }).formatToParts(new Date()).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+
+      const checada = {
+        id:              `CH${String(data.checadaCounter).padStart(4,'0')}`,
+        driverId:        sess.userId,
+        nombre:          user ? user.nombre : 'Desconocido',
+        tipo:            tipoSolicitado,
+        fecha:           todayFecha,
+        hora:            `${cancunNow.hour}:${cancunNow.minute}:${cancunNow.second}`,
+        ip:              clientIp,
+        lat:             ckLat,
+        lng:             ckLng,
+        locationStr:     body.locationStr || null,
+        accuracy:        typeof body.accuracy === 'number' ? body.accuracy : null,
+        distanciaKm:     Math.round(distanciaKm * 1000) / 1000,
+        dentroDeZona,
+        validacionEstado,
+        alertaBuddyPunch,
+        creadoEn:        new Date().toISOString()
+      };
+
+      data.checadas.push(checada);
+      writeData(data);
+      return json(res, checada, 201);
+    }
+
+    // GET /api/checadas — historial de checadas (admin/admin_unico; driver ve las suyas)
+    if (pathname === '/api/checadas' && method === 'GET') {
+      const HR_ROLES = ['admin_unico','admin'];
+      if (!HR_ROLES.includes(rol) && rol !== 'driver') return err(res, 'Sin permiso', 403);
+      const data = readData();
+      let lista = data.checadas || [];
+      if (rol === 'driver') lista = lista.filter(c => c.driverId === sess.userId);
+      // Ordenar más reciente primero
+      lista = [...lista].sort((a,b) => b.creadoEn.localeCompare(a.creadoEn));
+      return json(res, lista);
     }
 
     // GET /api/stats — solo admin_unico y admin
