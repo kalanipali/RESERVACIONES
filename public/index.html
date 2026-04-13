@@ -1,0 +1,2414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xotics | Sistema de Reservaciones</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════
+       VARIABLES & RESET
+    ═══════════════════════════════════════════ */
+    :root {
+      --bg:        #0a0a0a;
+      --surface:   #141414;
+      --surface2:  #1e1e1e;
+      --surface3:  #282828;
+      --border:    #2a2a2a;
+      --pink:      #ea1481;
+      --pink-dark: #c01070;
+      --pink-glow: rgba(234,20,129,0.15);
+      --text:      #f0f0f0;
+      --text-muted:#888;
+      --green:     #22c55e;
+      --yellow:    #f59e0b;
+      --red:       #ef4444;
+      --blue:      #3b82f6;
+      --sidebar-w: 250px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    input, select, textarea, button { font-family: inherit; }
+    a { color: var(--pink); text-decoration: none; }
+    .hidden { display: none !important; }
+
+    /* ═══════════════════════════════════════════
+       SCROLLBAR
+    ═══════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #444; }
+
+    /* ═══════════════════════════════════════════
+       LOGIN SCREEN
+    ═══════════════════════════════════════════ */
+    #loginScreen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at 30% 50%, rgba(234,20,129,0.08) 0%, transparent 60%), var(--bg);
+      padding: 20px;
+    }
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    }
+    .login-logo {
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .logo-x { color: var(--pink); }
+    .login-subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 36px;
+    }
+    .login-card .form-group { margin-bottom: 16px; }
+    .login-card label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .login-card input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 14px;
+      transition: border-color .2s;
+      outline: none;
+    }
+    .login-card input:focus { border-color: var(--pink); }
+    .error-msg {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #ef4444;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+
+    /* ═══════════════════════════════════════════
+       APP LAYOUT
+    ═══════════════════════════════════════════ */
+    #app {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* SIDEBAR */
+    #sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    #mainNav {
+      flex: 1;
+      padding: 12px 10px;
+      overflow-y: auto;
+    }
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 12px 10px 6px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all .15s;
+      margin-bottom: 2px;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active {
+      background: var(--pink-glow);
+      color: var(--pink);
+      font-weight: 600;
+    }
+    .nav-icon { font-size: 16px; flex-shrink: 0; }
+    #userProfile {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .user-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: var(--pink-glow);
+      border: 2px solid var(--pink);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; color: var(--pink);
+      flex-shrink: 0;
+    }
+    .user-info { flex: 1; overflow: hidden; }
+    .user-info .u-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-info .u-role { font-size: 10px; color: var(--text-muted); text-transform: capitalize; }
+    #logoutBtn {
+      background: none; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 16px; padding: 4px;
+      transition: color .15s; flex-shrink: 0;
+    }
+    #logoutBtn:hover { color: var(--red); }
+
+    /* MAIN AREA */
+    #mainWrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #topbar {
+      height: 60px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      flex-shrink: 0;
+    }
+    #pageTitle { font-size: 16px; font-weight: 700; }
+    #viewContainer {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    /* ═══════════════════════════════════════════
+       BUTTONS
+    ═══════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .btn-primary { background: var(--pink); color: #fff; }
+    .btn-primary:hover { background: var(--pink-dark); }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--surface3); }
+    .btn-danger { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .btn-danger:hover { background: rgba(239,68,68,0.25); }
+    .btn-success { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+    .btn-success:hover { background: rgba(34,197,94,0.25); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-full { width: 100%; justify-content: center; padding: 13px; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ═══════════════════════════════════════════
+       CARDS
+    ═══════════════════════════════════════════ */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* ═══════════════════════════════════════════
+       STATUS BADGES
+    ═══════════════════════════════════════════ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .badge-pendiente   { background: rgba(245,158,11,0.15); color: var(--yellow); }
+    .badge-en-camino   { background: rgba(59,130,246,0.15); color: var(--blue); }
+    .badge-completado  { background: rgba(34,197,94,0.15);  color: var(--green); }
+    .badge-no-show     { background: rgba(239,68,68,0.15);  color: var(--red); }
+    .badge-pago-pendiente  { background: rgba(245,158,11,0.12); color: var(--yellow); }
+    .badge-pago-pagado     { background: rgba(34,197,94,0.12);  color: var(--green); }
+    .badge-pago-por-cobrar { background: rgba(59,130,246,0.12); color: var(--blue); }
+
+    /* ═══════════════════════════════════════════
+       FORM ELEMENTS
+    ═══════════════════════════════════════════ */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .form-full { grid-column: 1 / -1; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 13px;
+      transition: border-color .2s;
+      outline: none;
+      width: 100%;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: var(--pink); }
+    .form-group select { cursor: pointer; }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-group input[type="number"] { -moz-appearance: textfield; }
+    .form-group input[type="number"]::-webkit-outer-spin-button,
+    .form-group input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .price-display {
+      background: var(--pink-glow);
+      border: 1px solid var(--pink);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--pink);
+    }
+    .section-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+    .form-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    /* ═══════════════════════════════════════════
+       TABLE
+    ═══════════════════════════════════════════ */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody td { padding: 12px 14px; font-size: 13px; vertical-align: middle; }
+    .td-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+    /* ═══════════════════════════════════════════
+       DASHBOARD
+    ═══════════════════════════════════════════ */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      border-left: 3px solid var(--pink);
+    }
+    .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: .8px; text-transform: uppercase; margin-bottom: 8px; }
+    .stat-value { font-size: 24px; font-weight: 800; color: var(--text); }
+    .stat-sub   { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .stat-card.green  { border-left-color: var(--green); }
+    .stat-card.yellow { border-left-color: var(--yellow); }
+    .stat-card.blue   { border-left-color: var(--blue); }
+
+    .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .dash-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .status-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .status-row:last-child { border-bottom: none; }
+    .rank-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .rank-row:last-child { border-bottom: none; }
+    .rank-num { font-size: 11px; color: var(--text-muted); width: 18px; text-align: center; flex-shrink: 0; }
+    .rank-label { flex: 1; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rank-value { font-size: 12px; font-weight: 700; color: var(--pink); flex-shrink: 0; }
+    .rank-sub { font-size: 10px; color: var(--text-muted); flex-shrink: 0; }
+    .bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 4px; }
+    .bar-fill { height: 100%; background: var(--pink); border-radius: 2px; }
+
+    /* ═══════════════════════════════════════════
+       CALENDAR
+    ═══════════════════════════════════════════ */
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .cal-month-title { font-size: 18px; font-weight: 700; }
+    .cal-nav { display: flex; gap: 8px; align-items: center; }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+    .cal-day-header {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 8px 0;
+    }
+    .cal-cell {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      min-height: 72px;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .cal-cell:hover { background: var(--surface2); border-color: #444; }
+    .cal-cell.empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
+    .cal-cell.today { border-color: var(--pink); }
+    .cal-cell.selected { background: var(--pink-glow); border-color: var(--pink); }
+    .cal-day-num { font-size: 13px; font-weight: 600; }
+    .cal-cell.today .cal-day-num { color: var(--pink); }
+    .cal-dots { display: flex; flex-wrap: wrap; gap: 3px; }
+    .cal-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .dot-pendiente  { background: var(--yellow); }
+    .dot-en-camino  { background: var(--blue); }
+    .dot-completado { background: var(--green); }
+    .dot-no-show    { background: var(--red); }
+    .cal-count { font-size: 10px; color: var(--text-muted); }
+
+    /* Day panel below calendar */
+    #dayPanel { margin-top: 4px; }
+    .day-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .day-panel-title { font-size: 14px; font-weight: 700; }
+
+    /* ═══════════════════════════════════════════
+       BOOKING CARDS
+    ═══════════════════════════════════════════ */
+    .booking-list { display: flex; flex-direction: column; gap: 10px; }
+    .booking-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      border-left: 3px solid var(--border);
+      transition: border-color .15s;
+      cursor: pointer;
+    }
+    .booking-card:hover { border-color: var(--pink); }
+    .booking-card.status-pendiente  { border-left-color: var(--yellow); }
+    .booking-card.status-en-camino  { border-left-color: var(--blue); }
+    .booking-card.status-completado { border-left-color: var(--green); }
+    .booking-card.status-no-show    { border-left-color: var(--red); }
+    .booking-card.welcome-card      { border-left-color: #06b6d4; background: rgba(6,182,212,.04); }
+    .welcome-tag { display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;
+                   background:rgba(6,182,212,.15);color:#06b6d4;letter-spacing:.5px; }
+    .booking-card-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .booking-card-top { margin-bottom: 6px; }
+    .booking-guest { font-size: 14px; font-weight: 700; flex: 1; }
+    .booking-time  { font-size: 12px; color: var(--pink); font-weight: 600; }
+    .booking-meta  { font-size: 12px; color: var(--text-muted); display: flex; gap: 14px; flex-wrap: wrap; }
+    .booking-meta span { display: flex; align-items: center; gap: 4px; }
+    .booking-price { font-size: 13px; font-weight: 700; color: var(--pink); margin-left: auto; }
+
+    /* ═══════════════════════════════════════════
+       DRIVER VIEW (MIS VIAJES)
+    ═══════════════════════════════════════════ */
+    .trip-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 14px;
+      border-left: 4px solid var(--border);
+    }
+    .trip-card.status-pendiente  { border-left-color: var(--yellow); }
+    .trip-card.status-en-camino  { border-left-color: var(--blue); }
+    .trip-card.status-completado { border-left-color: var(--green); }
+    .trip-card.status-no-show    { border-left-color: var(--red); }
+    .trip-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .trip-guest { font-size: 16px; font-weight: 700; }
+    .trip-datetime { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .trip-info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
+    .trip-info-item label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .8px; }
+    .trip-info-item p { font-size: 13px; font-weight: 500; margin-top: 2px; }
+    .trip-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .trip-notes { background: var(--surface2); border-radius: 6px; padding: 10px; font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+
+    /* ═══════════════════════════════════════════
+       MODAL
+    ═══════════════════════════════════════════ */
+    #modalOverlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    #modalBox {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 640px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    #modalClose {
+      position: sticky; top: 0; float: right;
+      margin: 14px 14px 0 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      width: 28px; height: 28px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1;
+      transition: color .15s;
+    }
+    #modalClose:hover { color: var(--text); }
+    #modalContent { padding: 20px 24px 24px; }
+    .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; margin-bottom: 16px; }
+    .detail-item label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; font-weight: 600; }
+    .detail-item p { font-size: 14px; font-weight: 500; margin-top: 3px; }
+    .detail-full { grid-column: 1 / -1; }
+
+    /* ═══════════════════════════════════════════
+       TOAST
+    ═══════════════════════════════════════════ */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 9999;
+      max-width: 320px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      animation: slideIn .25s ease;
+    }
+    .toast-success { border-left: 3px solid var(--green); }
+    .toast-error   { border-left: 3px solid var(--red); }
+    .toast-info    { border-left: 3px solid var(--blue); }
+    @keyframes slideIn {
+      from { transform: translateX(40px); opacity: 0; }
+      to   { transform: translateX(0);   opacity: 1; }
+    }
+
+    /* ═══════════════════════════════════════════
+       MISC
+    ═══════════════════════════════════════════ */
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .page-header h2 { font-size: 18px; font-weight: 700; }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: var(--surface3); color: var(--text-muted); }
+    .flex-row { display: flex; gap: 10px; align-items: center; }
+    .flex-wrap { flex-wrap: wrap; }
+    .filters-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+    .filters-bar input, .filters-bar select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+    .filters-bar input:focus, .filters-bar select:focus { border-color: var(--pink); }
+    .form-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; max-width: 900px; }
+    .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo"><span class="logo-x">X</span>OTICS</div>
+    <p class="login-subtitle">Sistema de Reservaciones</p>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Usuario</label>
+        <input type="text" id="loginUsername" placeholder="Ingresa tu usuario" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+      <div id="loginError" class="error-msg hidden"></div>
+      <button type="submit" class="btn btn-primary btn-full" style="margin-top:10px">Iniciar Sesión</button>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════════════════ -->
+<div id="app" class="hidden">
+  <aside id="sidebar">
+    <div class="sidebar-logo"><span class="logo-x">X</span>OTICS</div>
+    <nav id="mainNav"></nav>
+    <div id="userProfile">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div class="user-info">
+        <div class="u-name" id="userName">—</div>
+        <div class="u-role" id="userRoleBadge">—</div>
+      </div>
+      <button id="logoutBtn" title="Cerrar sesión">⏻</button>
+    </div>
+  </aside>
+  <div id="mainWrapper">
+    <header id="topbar">
+      <h1 id="pageTitle">—</h1>
+      <div id="topbarActions"></div>
+    </header>
+    <main id="viewContainer"></main>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modalOverlay" class="hidden">
+  <div id="modalBox">
+    <button id="modalClose">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="hidden"></div>
+
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  TARIFARIO 2026 — XOTICS TRANSPORTATION
+//  Precios en MXN · Tarifario oficial con tipo de cambio $18 MXN/USD
+//  Columnas: sedan | minivan | van8 | van13 | suburban | sprinter
+//  Horario regular: 09:00 AM – 19:00 PM
+// ════════════════════════════════════════════════════════════
+const TARIFARIO = [
+  // ── ZONA NORTE ──────────────────────────────────────────────────────────────────────────────────────────
+  { zona:"Norte",   destino:"Playa del Carmen",                                              sedan:650,  minivan:780,  van8:1300, van13:1690, suburban:2210, sprinter:3380 },
+  { zona:"Norte",   destino:"Corasol / Paradisus PDC",                                       sedan:700,  minivan:900,  van8:1200, van13:1600, suburban:2300, sprinter:2400 },
+  { zona:"Norte",   destino:"Princess / Mayakobá / Gran Velas / Hyatt Zylara / Blue Bay / Blue Diamond", sedan:900, minivan:1100, van8:1700, van13:2100, suburban:2300, sprinter:3400 },
+  { zona:"Norte",   destino:"Circo du Soleil / Iberostar / Vidanta / Valentín Imperial",     sedan:1000, minivan:1200, van8:1900, van13:2300, suburban:2600, sprinter:3800 },
+  { zona:"Norte",   destino:"Nickelodeon",                                                   sedan:1100, minivan:1300, van8:2000, van13:2400, suburban:2500, sprinter:4000 },
+  { zona:"Norte",   destino:"Puerto Morelos",                                                sedan:1200, minivan:1400, van8:2100, van13:2600, suburban:3000, sprinter:4200 },
+  { zona:"Norte",   destino:"Bahía Petempich",                                               sedan:1300, minivan:1500, van8:2400, van13:3000, suburban:3300, sprinter:4800 },
+  { zona:"Norte",   destino:"Xoximilco / Moon Palace / Royalton Splash",                    sedan:1500, minivan:1800, van8:2600, van13:3200, suburban:3800, sprinter:5200 },
+  { zona:"Norte",   destino:"Aeropuerto Cancún (CUN)",                                       sedan:1600, minivan:1800, van8:2900, van13:3600, suburban:3800, sprinter:5800 },
+  { zona:"Norte",   destino:"Zona Hotelera Cancún",                                          sedan:1800, minivan:2000, van8:3100, van13:4000, suburban:4200, sprinter:6200 },
+  { zona:"Norte",   destino:"Cancún Centro",                                                 sedan:1800, minivan:2000, van8:3100, van13:4000, suburban:4200, sprinter:6200 },
+  { zona:"Norte",   destino:"Puerto Juárez",                                                 sedan:2100, minivan:2300, van8:3400, van13:4300, suburban:4900, sprinter:6800 },
+  { zona:"Norte",   destino:"Playa Mujeres / Villas del Palmar",                            sedan:2300, minivan:2500, van8:3600, van13:4500, suburban:5200, sprinter:7200 },
+  { zona:"Norte",   destino:"Costa Mujeres / RIU Dunamar",                                  sedan:2500, minivan:2700, van8:3800, van13:4700, suburban:5600, sprinter:7600 },
+  // ── ZONA SUR ────────────────────────────────────────────────────────────────────────────────────────────
+  { zona:"Sur",     destino:"Hard Rock / Pto. Aventuras / Barceló / Cenotes",               sedan:700,  minivan:900,  van8:1200, van13:1500, suburban:2300, sprinter:2400 },
+  { zona:"Sur",     destino:"Dorado Único / Palladium / Sirenis",                           sedan:800,  minivan:1000, van8:1300, van13:1600, suburban:2500, sprinter:2600 },
+  { zona:"Sur",     destino:"Akumal / Bahía Príncipe / PGA / Chemuyil",                    sedan:900,  minivan:1100, van8:1600, van13:1800, suburban:2900, sprinter:3200 },
+  { zona:"Sur",     destino:"Xel-Há",                                                       sedan:1000, minivan:1300, van8:2200, van13:2600, suburban:3200, sprinter:5000 },
+  { zona:"Sur",     destino:"Tulum Ruinas y Centro",                                        sedan:1500, minivan:1800, van8:2600, van13:3100, suburban:3800, sprinter:5200 },
+  { zona:"Sur",     destino:"Tulum La Veleta",                                              sedan:1900, minivan:2200, van8:2900, van13:3400, suburban:4300, sprinter:5800 },
+  { zona:"Sur",     destino:"Tulum Zona Hotelera",                                          sedan:1900, minivan:2200, van8:2900, van13:3400, suburban:4300, sprinter:5800 },
+  { zona:"Sur",     destino:"Aeropuerto Tulum",                                             sedan:3500, minivan:3700, van8:5000, van13:6000, suburban:6500, sprinter:10000},
+  // ── DESTINOS ESPECIALES ─────────────────────────────────────────────────────────────────────────────────
+  { zona:"Especial",destino:"Cobá",                                                          sedan:2500, minivan:3000, van8:4000, van13:4800, suburban:5500, sprinter:8000 },
+  { zona:"Especial",destino:"Chiquilá / Holbox",                                            sedan:3500, minivan:4000, van8:6550, van13:7800, suburban:9650, sprinter:13100},
+  { zona:"Especial",destino:"Chichén Itzá",                                                 sedan:5000, minivan:5500, van8:6500, van13:7500, suburban:11500,sprinter:13000},
+  { zona:"Especial",destino:"Mérida",                                                        sedan:7300, minivan:7600, van8:12100,van13:12700,suburban:14500,sprinter:24200},
+  { zona:"Especial",destino:"Bacalar",                                                       sedan:5800, minivan:6950, van8:8000, van13:9600, suburban:13500,sprinter:16000},
+];
+
+// Tarifas por hora (mínimo 3 horas)
+// Precio = min3h para las primeras 3 horas; cada hora adicional = porHora
+const HORAS_RATES = {
+  sedan:    { porHora:800,  min3h:1100 },
+  minivan:  { porHora:1000, min3h:1300 },
+  van8:     { porHora:1300, min3h:1600 },
+  van13:    { porHora:1500, min3h:1800 },
+  suburban: { porHora:1900, min3h:2200 },
+  sprinter: { porHora:2600, min3h:7800 },
+};
+
+// Vehicle type labels
+const TIPO_LABEL = {
+  sedan:    'Sedan (1-3 Pax)',
+  minivan:  'Minivan (1-5 Pax)',
+  van8:     'Van Urvan (1-8 Pax)',
+  van13:    'Van Urvan (1-13 Pax)',
+  suburban: 'Suburban (1-5 Pax)',
+  sprinter: 'Sprinter (1-20 Pax)',
+};
+
+const ROL_LABEL = {
+  admin_unico:  'Cuenta Maestra',
+  admin:        'Administrador',
+  coordinador:  'Coordinador',
+  asesor:       'Asesor de Ventas',
+  driver:       'Driver',
+};
+
+const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_ES  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+// ════════════════════════════════════════════════════════════
+//  APP STATE
+// ════════════════════════════════════════════════════════════
+const S = {
+  user:        null,    // current user
+  vehicles:    [],
+  drivers: [],
+  users:       [],
+  calMonth:    null,   // se inicializa con la fecha de Cancún en renderCalendar
+  selDate:     null,
+  dayBookings: [],
+  currentView: null,
+};
+
+// ════════════════════════════════════════════════════════════
+//  API HELPERS
+// ════════════════════════════════════════════════════════════
+async function api(method, url, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    ...(body ? { body: JSON.stringify(body) } : {})
+  };
+  const res = await fetch(url, opts);
+  if (res.status === 401) { showLoginScreen(); return null; }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Error del servidor');
+  return data;
+}
+const GET  = (url)        => api('GET',    url);
+const POST = (url, body)  => api('POST',   url, body);
+const PUT  = (url, body)  => api('PUT',    url, body);
+const DEL  = (url)        => api('DELETE', url);
+
+// ════════════════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════════════════
+const fmxn = (n) => new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN', minimumFractionDigits:0 }).format(n||0);
+const fdate = (d) => { if (!d) return '—'; const [y,m,day]=d.split('-'); return `${day} ${MESES_ES[parseInt(m)-1]} ${y}`; };
+const fdateShort = (d) => { if (!d) return '—'; const [y,m,day]=d.split('-'); return `${day}/${m}/${y}`; };
+// Zona horaria permanente: Cancún, México (UTC-5, sin horario de verano)
+const CANCUN_TZ = 'America/Cancun';
+const today = () => new Intl.DateTimeFormat('en-CA', {timeZone: CANCUN_TZ}).format(new Date());
+
+function statusLabel(s) {
+  return {pendiente:'Pendiente','en-camino':'En Camino',completado:'Completado','no-show':'No Show','en-hotel':'En Hotel'}[s]||s;
+}
+function esOrigenHotel(b) {
+  return ['HXM','HXM II','HXA'].includes(b.origenTipo || b.origen);
+}
+function pagoLabel(s) {
+  return {pendiente:'Pago Pendiente',pagado:'Pagado','por-cobrar':'Por Cobrar'}[s]||s;
+}
+function metodoLabel(s) {
+  return {tarjeta:'Tarjeta',link:'Link de Pago',efectivo:'Efectivo MXN',usd:'Efectivo USD','club-cash':'Club Cash'}[s]||s||'—';
+}
+function servicioLabel(s) {
+  return {traslado:'Traslado',tour:'Tour','por-horas':'Por Horas'}[s]||s;
+}
+function badge(s) {
+  return `<span class="badge badge-${s}">${statusLabel(s)}</span>`;
+}
+function badgePago(s) {
+  return `<span class="badge badge-pago-${s}">${pagoLabel(s)}</span>`;
+}
+
+// Auto-calculate price
+function calcPrice(destinoName, vehiculoTipo, tipoServicio, horas) {
+  if (tipoServicio === 'por-horas') {
+    const rates = HORAS_RATES[vehiculoTipo];
+    if (!rates) return 0;
+    const h = Math.max(parseInt(horas) || 3, 3);
+    return h <= 3 ? rates.min3h : rates.min3h + (h - 3) * rates.porHora;
+  }
+  const row = TARIFARIO.find(t => t.destino === destinoName);
+  if (!row || !vehiculoTipo) return 0;
+  return row[vehiculoTipo] || 0;
+}
+
+// ════════════════════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast-${type}`;
+  t.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add('hidden'), 3500);
+}
+
+// ════════════════════════════════════════════════════════════
+//  MODAL
+// ════════════════════════════════════════════════════════════
+function openModal(html) {
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.add('hidden');
+  document.getElementById('modalContent').innerHTML = '';
+}
+
+// ════════════════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════════════════
+function showLoginScreen() {
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('app').classList.add('hidden');
+}
+
+async function doLogin(username, password) {
+  const errEl = document.getElementById('loginError');
+  errEl.classList.add('hidden');
+  try {
+    const user = await POST('/api/login', { username, password });
+    if (!user) return;
+    S.user = user;
+    await initApp();
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove('hidden');
+  }
+}
+
+async function doLogout() {
+  await POST('/api/logout');
+  S.user = null;
+  showLoginScreen();
+}
+
+// ════════════════════════════════════════════════════════════
+//  NAV SETUP
+// ════════════════════════════════════════════════════════════
+function buildNav() {
+  const rol = S.user.rol;
+  const nav = document.getElementById('mainNav');
+
+  const menus = {
+    admin_unico: [
+      { id:'dashboard',       icon:'📊', label:'Dashboard'         },
+      { id:'calendario',      icon:'📅', label:'Calendario'        },
+      { id:'reservaciones',   icon:'📋', label:'Reservaciones'     },
+      { id:'nueva',           icon:'＋', label:'Nueva Reservación'  },
+      { id:'welcome',         icon:'🎫', label:'Welcome'           },
+      { id:'estado-drivers',  icon:'🚦', label:'Estado de Drivers' },
+      { id:'usuarios',        icon:'👥', label:'Usuarios'          },
+      { id:'vehiculos',       icon:'🚗', label:'Vehículos'         },
+    ],
+    admin: [
+      { id:'dashboard',       icon:'📊', label:'Dashboard'         },
+      { id:'calendario',      icon:'📅', label:'Calendario'        },
+      { id:'reservaciones',   icon:'📋', label:'Reservaciones'     },
+      { id:'nueva',           icon:'＋', label:'Nueva Reservación'  },
+      { id:'welcome',         icon:'🎫', label:'Welcome'           },
+      { id:'estado-drivers',  icon:'🚦', label:'Estado de Drivers' },
+      { id:'usuarios',        icon:'👥', label:'Usuarios'          },
+    ],
+    coordinador: [
+      { id:'calendario',      icon:'📅', label:'Calendario'        },
+      { id:'reservaciones',   icon:'📋', label:'Reservaciones'     },
+      { id:'nueva',           icon:'＋', label:'Nueva Reservación'  },
+      { id:'welcome',         icon:'🎫', label:'Welcome'           },
+      { id:'estado-drivers',  icon:'🚦', label:'Estado de Drivers' },
+    ],
+    asesor: [
+      { id:'calendario',      icon:'📅', label:'Calendario'        },
+      { id:'reservaciones',   icon:'📋', label:'Reservaciones'     },
+      { id:'nueva',           icon:'＋', label:'Nueva Reservación'  },
+    ],
+    driver: [
+      { id:'mis-viajes',      icon:'🗺️', label:'Mis Viajes'        },
+    ],
+  };
+
+  nav.innerHTML = (menus[rol]||[]).map(m =>
+    `<button class="nav-item" data-view="${m.id}" onclick="navigate('${m.id}')">
+      <span class="nav-icon">${m.icon}</span> ${m.label}
+    </button>`
+  ).join('');
+}
+
+function setActiveNav(viewId) {
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.view === viewId);
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════════════════
+const PAGE_TITLES = {
+  dashboard:         'Dashboard',
+  calendario:        'Calendario',
+  reservaciones:     'Reservaciones',
+  nueva:             'Nueva Reservación',
+  'mis-viajes':      'Mis Viajes',
+  'estado-drivers':  'Estado de Drivers',
+  usuarios:          'Gestión de Usuarios',
+  vehiculos:         'Flota de Vehículos',
+  welcome:           'Welcome',
+  'nuevo-welcome':   'Nuevo Welcome',
+};
+
+function navigate(viewId, opts={}) {
+  // Limpiar intervals al salir de las vistas con auto-refresh
+  clearInterval(driverStatusInterval); driverStatusInterval = null;
+  clearInterval(dashboardInterval);    dashboardInterval    = null;
+
+  S.currentView = viewId;
+  setActiveNav(viewId);
+  document.getElementById('pageTitle').textContent = PAGE_TITLES[viewId] || viewId;
+
+  const renders = {
+    dashboard:         renderDashboard,
+    calendario:        renderCalendar,
+    reservaciones:     renderReservaciones,
+    nueva:             () => renderBookingForm(null, opts.fecha||null),
+    'mis-viajes':      renderMisViajes,
+    'estado-drivers':  renderEstadoDrivers,
+    usuarios:          renderUsuarios,
+    vehiculos:         renderVehiculos,
+    welcome:           renderWelcome,
+    'nuevo-welcome':   () => renderWelcomeForm(null),
+  };
+  (renders[viewId] || (() => {}))();
+}
+
+// ════════════════════════════════════════════════════════════
+//  PRELOAD DATA
+// ════════════════════════════════════════════════════════════
+async function preloadData() {
+  const canSeeDrivers = ['admin_unico','admin','coordinador'].includes(S.user.rol);
+  const [vehicles, drivers] = await Promise.all([
+    GET('/api/vehicles'),
+    canSeeDrivers ? GET('/api/drivers') : Promise.resolve([]),
+  ]);
+  S.vehicles = vehicles || [];
+  S.drivers  = drivers  || [];
+  if (['admin_unico','admin','coordinador'].includes(S.user.rol)) {
+    S.users = (await GET('/api/users')) || [];
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  VIEW: DASHBOARD (Admin)
+// ════════════════════════════════════════════════════════════
+async function renderDashboard() {
+  document.getElementById('topbarActions').innerHTML =
+    `<button class="btn btn-primary btn-sm" onclick="navigate('nueva')">＋ Nueva Reservación</button>`;
+  const vc = document.getElementById('viewContainer');
+  vc.innerHTML = `<div style="display:flex;align-items:center;gap:10px;color:var(--text-muted)">Cargando estadísticas…</div>`;
+
+  await _loadDashboard(vc);
+
+  // Auto-refresh cada 30 segundos
+  dashboardInterval = setInterval(async () => {
+    if (S.currentView !== 'dashboard') {
+      clearInterval(dashboardInterval); dashboardInterval = null; return;
+    }
+    const vcc = document.getElementById('viewContainer');
+    if (!vcc) { clearInterval(dashboardInterval); dashboardInterval = null; return; }
+    await _loadDashboard(vcc);
+  }, 30000);
+}
+
+async function _loadDashboard(vc) {
+  if (!vc) return;
+  try {
+    const stats = await GET('/api/stats');
+    if (!stats) throw new Error('Sin datos');
+    const resumen   = stats.resumen   || {};
+    const estatus   = stats.estatus   || {};
+    const byDriver  = stats.byDriver  || [];
+    const byDestino = stats.byDestino || [];
+    const weekly    = stats.weekly    || [];
+    const monthly   = stats.monthly   || {};
+
+    const hoy              = resumen.hoy              || { ingresos:0, viajes:0 };
+    const semana           = resumen.semana            || { ingresos:0, viajes:0 };
+    const mes              = resumen.mes               || { ingresos:0, viajes:0 };
+    const transaccionesHoy = resumen.transaccionesHoy  || { ingresos:0, viajes:0 };
+
+    const maxDriver  = Math.max(...byDriver.map(d=>d.total), 1);
+    const maxDestino = Math.max(...byDestino.map(d=>d.total), 1);
+    const maxWeekly  = Math.max(...weekly.map(w=>w.total||0), 1);
+
+    const monthlyArr = [
+      { label:'HXM',     val: monthly.hxm     || 0, color:'var(--pink)'  },
+      { label:'HXM II',  val: monthly.hxm2    || 0, color:'var(--blue)'  },
+      { label:'HXA',     val: monthly.hxa      || 0, color:'var(--green)' },
+      { label:'Welcome', val: monthly.welcome  || 0, color:'#06b6d4'      },
+    ];
+    const maxMonthly = Math.max(...monthlyArr.map(x=>x.val), 1);
+
+    // ── Stacked weekly chart ──────────────────────────────
+    const SEG_COLORS = ['var(--pink)','var(--blue)','var(--green)','#06b6d4'];
+    const SEG_KEYS   = ['hxm','hxm2','hxa','welcome'];
+    let weeklyChartHtml = '<p style="color:var(--text-muted);font-size:13px">Sin datos</p>';
+    if (weekly.length > 0) {
+      let barsHtml = '', labelsHtml = '';
+      weekly.forEach(w => {
+        const tot = w.total || 0;
+        const totalH = Math.max(Math.round(tot / maxWeekly * 110), tot > 0 ? 3 : 0);
+        let segsHtml = '';
+        SEG_KEYS.forEach((k, si) => {
+          const h = tot > 0 ? Math.max(Math.round((w[k]||0) / maxWeekly * 110), 0) : 0;
+          if (h > 0) segsHtml += '<div style="width:100%;height:' + h + 'px;background:' + SEG_COLORS[si] + ';"></div>';
+        });
+        barsHtml +=
+          '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">' +
+            '<div style="font-size:9px;color:var(--text-muted);font-weight:600;text-align:center">' + fmxn(tot) + '</div>' +
+            '<div style="width:100%;min-height:' + totalH + 'px;display:flex;flex-direction:column;' +
+              'justify-content:flex-end;border-radius:4px 4px 0 0;overflow:hidden">' + segsHtml + '</div>' +
+          '</div>';
+        labelsHtml +=
+          '<div style="flex:1;text-align:center">' +
+            '<div style="font-size:10px;color:var(--text-muted)">' + w.label + '</div>' +
+            '<div style="font-size:10px;color:var(--text-muted)">' + (w.viajes||0) + ' viaje(s)</div>' +
+          '</div>';
+      });
+      const legendHtml = [['HXM','var(--pink)'],['HXM II','var(--blue)'],['HXA','var(--green)'],['Welcome','#06b6d4']].map(
+        ([l,c]) => '<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted)">' +
+                   '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:' + c + '"></span>' + l + '</span>'
+      ).join('');
+      weeklyChartHtml =
+        '<div style="display:flex;align-items:flex-end;gap:12px;height:140px;padding-bottom:6px">' + barsHtml + '</div>' +
+        '<div style="display:flex;gap:12px;margin-top:4px">' + labelsHtml + '</div>' +
+        '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">' + legendHtml + '</div>';
+    }
+
+    // ── Monthly chart ────────────────────────────────────
+    let monthlyChartHtml = '<p style="color:var(--text-muted);font-size:13px">Sin datos este mes</p>';
+    if (!monthlyArr.every(x => x.val === 0)) {
+      let mBarsHtml = '', mLabelsHtml = '';
+      monthlyArr.forEach(x => {
+        const h = Math.max(Math.round(x.val / maxMonthly * 100), x.val > 0 ? 3 : 0);
+        mBarsHtml +=
+          '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">' +
+            '<div style="font-size:10px;color:var(--text-muted);font-weight:600;text-align:center">' + fmxn(x.val) + '</div>' +
+            '<div style="width:100%;height:' + h + 'px;background:' + x.color + ';border-radius:4px 4px 0 0;min-height:' + (x.val>0?3:0) + 'px"></div>' +
+          '</div>';
+        mLabelsHtml +=
+          '<div style="flex:1;text-align:center">' +
+            '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:' + x.color + ';margin-right:3px"></span>' +
+            '<span style="font-size:10px;color:var(--text-muted)">' + x.label + '</span>' +
+          '</div>';
+      });
+      monthlyChartHtml =
+        '<div style="display:flex;align-items:flex-end;gap:16px;height:120px;padding-bottom:6px;margin-bottom:8px">' + mBarsHtml + '</div>' +
+        '<div style="display:flex;gap:16px">' + mLabelsHtml + '</div>';
+    }
+
+    vc.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Ventas de Hoy</div>
+        <div class="stat-value">${fmxn(hoy.ingresos)}</div>
+        <div class="stat-sub">${hoy.viajes} viaje(s)</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Transacciones de Hoy</div>
+        <div class="stat-value">${fmxn(transaccionesHoy.ingresos)}</div>
+        <div class="stat-sub">${transaccionesHoy.viajes} reservación(es) creadas hoy</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Esta Semana</div>
+        <div class="stat-value">${fmxn(semana.ingresos)}</div>
+        <div class="stat-sub">${semana.viajes} viaje(s)</div>
+      </div>
+      <div class="stat-card yellow">
+        <div class="stat-label">Este Mes</div>
+        <div class="stat-value">${fmxn(mes.ingresos)}</div>
+        <div class="stat-sub">${mes.viajes} viaje(s)</div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="card">
+        <div class="card-title">Estatus de Viajes</div>
+        ${[
+          ['Pendiente',  'pendiente',   estatus.pendiente,    'yellow'],
+          ['En Camino',  'en-camino',   estatus['en-camino'], 'blue'],
+          ['Completado', 'completado',  estatus.completado,   'green'],
+          ['No Show',    'no-show',     estatus['no-show'],   'red'],
+        ].map(([lbl,key,cnt,c])=>`
+          <div class="status-row">
+            <span class="badge badge-${key}">${lbl}</span>
+            <span style="font-weight:700;font-size:18px;color:var(--${c})">${cnt}</span>
+          </div>`).join('')}
+      </div>
+
+      <div class="card">
+        <div class="card-title">Ventas por Semana</div>
+        ${weeklyChartHtml}
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="card">
+        <div class="card-title">Ventas del Mes por Unidad</div>
+        ${monthlyChartHtml}
+      </div>
+
+      <div class="card">
+        <div class="card-title">Ventas por Driver</div>
+        ${byDriver.length===0 ? '<p style="color:var(--text-muted);font-size:13px">Sin datos</p>' :
+          byDriver.map((d,i)=>`
+            <div class="rank-row">
+              <span class="rank-num">${i+1}</span>
+              <div style="flex:1;overflow:hidden">
+                <div class="rank-label">${d.nombre}</div>
+                <div class="bar"><div class="bar-fill" style="width:${Math.round(d.total/maxDriver*100)}%"></div></div>
+              </div>
+              <div style="text-align:right">
+                <div class="rank-value">${fmxn(d.total)}</div>
+                <div class="rank-sub">${d.viajes} viaje(s)</div>
+              </div>
+            </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="dash-grid" style="grid-template-columns:1fr">
+      <div class="card">
+        <div class="card-title">Top Destinos por Venta</div>
+        ${byDestino.length===0 ? '<p style="color:var(--text-muted);font-size:13px">Sin datos</p>' :
+          byDestino.map((d,i)=>`
+            <div class="rank-row">
+              <span class="rank-num">${i+1}</span>
+              <div style="flex:1;overflow:hidden">
+                <div class="rank-label" title="${d.destino}">${d.destino}</div>
+                <div class="bar"><div class="bar-fill" style="width:${Math.round(d.total/maxDestino*100)}%"></div></div>
+              </div>
+              <div style="text-align:right">
+                <div class="rank-value">${fmxn(d.total)}</div>
+                <div class="rank-sub">${d.viajes} viaje(s)</div>
+              </div>
+            </div>`).join('')}
+      </div>
+    </div>`;
+  } catch(e) {
+    showToast('Error cargando estadísticas', 'error');
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  VIEW: CALENDARIO
+// ════════════════════════════════════════════════════════════
+async function renderCalendar() {
+  document.getElementById('topbarActions').innerHTML =
+    `<button class="btn btn-primary btn-sm" onclick="navigate('nueva',{fecha:S.selDate||today()})">＋ Nueva Reservación</button>`;
+
+  // Inicializar calMonth con la fecha de hoy en Cancún si aún no está definido
+  if (!S.calMonth) {
+    const tp = today().split('-');
+    S.calMonth = new Date(parseInt(tp[0]), parseInt(tp[1])-1, 1);
+  }
+
+  const vc = document.getElementById('viewContainer');
+  vc.innerHTML = `<div id="calWrapper"></div><div id="dayPanel"></div>`;
+
+  await buildCalendarGrid();
+
+  if (!S.selDate) S.selDate = today();
+  await loadDayBookings(S.selDate);
+}
+
+async function buildCalendarGrid() {
+  const year  = S.calMonth.getFullYear();
+  const month = S.calMonth.getMonth();
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const offset = firstDow === 0 ? 6 : firstDow - 1; // Monday first
+
+  // Load bookings for this month
+  const mes = `${year}-${String(month+1).padStart(2,'0')}`;
+  let monthBookings = [];
+  try { monthBookings = (await GET(`/api/bookings?mes=${mes}`)) || []; } catch(e) {}
+
+  // Group by date
+  const byDate = {};
+  monthBookings.forEach(b => {
+    if (!byDate[b.fecha]) byDate[b.fecha] = [];
+    byDate[b.fecha].push(b);
+  });
+
+  const todayStr = today();
+
+  let html = `
+    <div class="card" style="margin-bottom:16px">
+      <div class="cal-header">
+        <div class="cal-nav">
+          <button class="btn btn-secondary btn-sm" onclick="calNav(-1)">‹</button>
+          <button class="btn btn-secondary btn-sm" onclick="calGoToday()">Hoy</button>
+          <button class="btn btn-secondary btn-sm" onclick="calNav(1)">›</button>
+        </div>
+        <span class="cal-month-title">${MESES_ES[month]} ${year}</span>
+        <div style="width:120px"></div>
+      </div>
+      <div class="cal-grid">
+        ${['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(d=>`<div class="cal-day-header">${d}</div>`).join('')}
+        ${Array(offset).fill(`<div class="cal-cell empty"></div>`).join('')}
+        ${Array.from({length:daysInMonth},(_,i)=>{
+          const d = i+1;
+          const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+          const bks = byDate[dateStr]||[];
+          const isToday    = dateStr===todayStr;
+          const isSelected = dateStr===S.selDate;
+          const dots = bks.slice(0,8).map(b=>`<span class="cal-dot dot-${b.estatusViaje}"></span>`).join('');
+          return `<div class="cal-cell${isToday?' today':''}${isSelected?' selected':''}" onclick="selectCalDay('${dateStr}')">
+            <span class="cal-day-num">${d}</span>
+            <div class="cal-dots">${dots}</div>
+            ${bks.length>0?`<span class="cal-count">${bks.length} viaje(s)</span>`:''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  document.getElementById('calWrapper').innerHTML = html;
+}
+
+async function selectCalDay(dateStr) {
+  S.selDate = dateStr;
+  document.querySelectorAll('.cal-cell.selected').forEach(el=>el.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  await loadDayBookings(dateStr);
+}
+
+async function loadDayBookings(dateStr) {
+  const panel = document.getElementById('dayPanel');
+  if (!panel) return;
+  panel.innerHTML = `<div style="color:var(--text-muted);font-size:13px">Cargando…</div>`;
+  try {
+    const bks = (await GET(`/api/bookings?fecha=${dateStr}`)) || [];
+    S.dayBookings = bks;
+    renderDayPanel(dateStr, bks);
+  } catch(e) {
+    panel.innerHTML = '';
+  }
+}
+
+function renderDayPanel(dateStr, bks) {
+  const panel = document.getElementById('dayPanel');
+  if (!panel) return;
+  const canCreate = S.user.rol !== 'driver';
+  panel.innerHTML = `
+    <div class="day-panel-header">
+      <span class="day-panel-title">${fdate(dateStr)} — ${bks.length} viaje(s)</span>
+      ${canCreate ? `<button class="btn btn-primary btn-sm" onclick="navigate('nueva',{fecha:'${dateStr}'})">＋ Agregar</button>`:''}
+    </div>
+    ${bks.length===0
+      ? `<div class="empty-state"><div class="empty-icon">🗓️</div><p>Sin reservaciones para este día</p></div>`
+      : `<div class="booking-list">${bks.map(b=>bookingCard(b,true)).join('')}</div>`}`;
+}
+
+async function calNav(dir) {
+  S.calMonth = new Date(S.calMonth.getFullYear(), S.calMonth.getMonth()+dir, 1);
+  await buildCalendarGrid();
+}
+async function calGoToday() {
+  // Re-initialize from today in Cancún time
+  const todayParts = today().split('-');
+  S.calMonth = new Date(parseInt(todayParts[0]), parseInt(todayParts[1])-1, 1);
+  S.selDate  = today();
+  await buildCalendarGrid();
+  await loadDayBookings(S.selDate);
+}
+
+// ════════════════════════════════════════════════════════════
+//  VIEW: RESERVACIONES (all)
+// ════════════════════════════════════════════════════════════
+async function renderReservaciones() {
+  const canCreate     = S.user.rol !== 'driver';
+  const canSeeWelcome = ['admin_unico','admin','coordinador'].includes(S.user.rol);
+  document.getElementById('topbarActions').innerHTML = canCreate
+    ? `<button class="btn btn-primary btn-sm" onclick="navigate('nueva')">＋ Nueva Reservación</button>` : '';
+
+  const vc = document.getElementById('viewContainer');
+  vc.innerHTML = `
+    ${canSeeWelcome ? `
+    <div style="display:flex;gap:20px;margin-bottom:10px;align-items:center">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;user-select:none">
+        <input type="checkbox" id="chkHoteles" checked onchange="applyFilters()" style="width:15px;height:15px;cursor:pointer">
+        🏨 <span style="font-weight:600">HOTELES</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;user-select:none">
+        <input type="checkbox" id="chkWelcome" checked onchange="applyFilters()" style="width:15px;height:15px;cursor:pointer">
+        🎫 <span style="font-weight:600;color:#06b6d4">WELCOME</span>
+      </label>
+    </div>` : ''}
+    <div class="filters-bar" style="flex-wrap:wrap;gap:8px">
+      <input type="date" id="filterFechaInicio" value="${today()}" onchange="applyFilters()" title="Fecha inicio">
+      <span style="align-self:center;color:var(--text-muted);font-size:12px">–</span>
+      <input type="date" id="filterFechaFin" value="${today()}" onchange="applyFilters()" title="Fecha fin">
+      <select id="filterEstatus" onchange="applyFilters()">
+        <option value="">Todos los estatus</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="en-camino">En Camino</option>
+        <option value="completado">Completado</option>
+        <option value="no-show">No Show</option>
+        <option value="en-hotel">En Hotel</option>
+      </select>
+      <input type="text" id="filterBuscar" placeholder="🔍 ID, nombre, apellido o email…"
+        oninput="applyFilters()" style="min-width:200px;flex:1">
+      <button class="btn btn-secondary btn-sm" onclick="clearFilters()">Limpiar</button>
+    </div>
+    <div id="resList"><div style="color:var(--text-muted);font-size:13px">Cargando…</div></div>`;
+  await applyFilters();
+}
+
+async function applyFilters() {
+  const fechaInicio   = document.getElementById('filterFechaInicio')?.value || '';
+  const fechaFin      = document.getElementById('filterFechaFin')?.value    || '';
+  const estatus       = document.getElementById('filterEstatus')?.value     || '';
+  const buscar        = (document.getElementById('filterBuscar')?.value     || '').trim().toLowerCase();
+  const chkHoteles    = document.getElementById('chkHoteles')?.checked !== false;
+  const chkWelcome    = document.getElementById('chkWelcome')?.checked  !== false;
+  const canSeeWelcome = ['admin_unico','admin','coordinador'].includes(S.user.rol);
+
+  try {
+    let items = [];
+
+    // Hotel bookings
+    if (chkHoteles || !canSeeWelcome) {
+      let bks = (await GET('/api/bookings')) || [];
+      if (fechaInicio) bks = bks.filter(b => b.fecha >= fechaInicio);
+      if (fechaFin)    bks = bks.filter(b => b.fecha <= fechaFin);
+      if (estatus)     bks = bks.filter(b => b.estatusViaje === estatus);
+      if (buscar) bks = bks.filter(b => {
+        const nombre = (b.huespedNombre || '').toLowerCase();
+        const email  = (b.huespedEmail  || '').toLowerCase();
+        const id     = (b.bookingId     || '').toLowerCase();
+        return nombre.includes(buscar) || email.includes(buscar) || id.includes(buscar);
+      });
+      items = bks.map(b => ({ ...b, _type:'booking' }));
+    }
+
+    // Welcome records (solo para roles que pueden verlos)
+    if (canSeeWelcome && chkWelcome) {
+      let wels = (await GET('/api/welcomes')) || [];
+      if (fechaInicio) wels = wels.filter(w => w.fecha >= fechaInicio);
+      if (fechaFin)    wels = wels.filter(w => w.fecha <= fechaFin);
+      if (buscar) wels = wels.filter(w => {
+        const nombre = (w.nombre     || '').toLowerCase();
+        const id     = (w.welcomeId  || '').toLowerCase();
+        return nombre.includes(buscar) || id.includes(buscar);
+      });
+      items = items.concat(wels.map(w => ({ ...w, _type:'welcome' })));
+    }
+
+    // Ordenar por fecha + hora
+    items.sort((a, b) => {
+      const da = (a.fecha||'') + (a.hora||'00:00');
+      const db = (b.fecha||'') + (b.hora||'00:00');
+      return da.localeCompare(db);
+    });
+
+    const list = document.getElementById('resList');
+    if (!list) return;
+    list.innerHTML = items.length === 0
+      ? `<div class="empty-state"><div class="empty-icon">📋</div><p>Sin reservaciones para los filtros seleccionados</p></div>`
+      : `<div class="booking-list">${items.map(item =>
+          item._type === 'welcome' ? welcomeCard(item, true) : bookingCard(item, true)
+        ).join('')}</div>`;
+  } catch(e) { showToast('Error cargando reservaciones','error'); }
+}
+
+function clearFilters() {
+  const fi   = document.getElementById('filterFechaInicio');
+  const ff   = document.getElementById('filterFechaFin');
+  const est  = document.getElementById('filterEstatus');
+  const bus  = document.getElementById('filterBuscar');
+  const chkH = document.getElementById('chkHoteles');
+  const chkW = document.getElementById('chkWelcome');
+  if (fi)   fi.value   = today();
+  if (ff)   ff.value   = today();
+  if (est)  est.value  = '';
+  if (bus)  bus.value  = '';
+  if (chkH) chkH.checked = true;
+  if (chkW) chkW.checked = true;
+  applyFilters();
+}
+
+// ════════════════════════════════════════════════════════════
+//  BOOKING CARD COMPONENT
+// ════════════════════════════════════════════════════════════
+function bookingCard(b, clickable=true) {
+  const onclick = clickable ? `onclick="openBookingDetail('${b.id}')"` : '';
+  return `
+    <div class="booking-card status-${b.estatusViaje}" ${onclick}>
+      <div class="booking-card-row booking-card-top">
+        <span class="booking-guest">${b.huespedNombre||'Sin nombre'} <span style="color:var(--text-muted);font-size:11px;font-weight:400">#${b.bookingId||'—'}</span></span>
+        <span class="booking-time">${b.hora||'--:--'}</span>
+        ${badge(b.estatusViaje)}
+      </div>
+      <div class="booking-meta">
+        <span>📍 ${b.origenTipo||b.origen||'—'} → ${b.destino||'—'}</span>
+        <span>🚗 ${b.vehiculoNombre||'—'}</span>
+        <span>👤 ${b.driverNombre||'Sin asignar'}</span>
+        <span>👥 ${b.pasajeros} pax</span>
+        ${b.numeroVuelo?`<span>✈️ ${b.numeroVuelo}</span>`:''}
+        <span class="booking-price">${fmxn(b.precio)}</span>
+      </div>
+    </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  BOOKING DETAIL MODAL
+// ════════════════════════════════════════════════════════════
+async function openBookingDetail(id) {
+  try {
+    const b = await GET(`/api/bookings/${id}`);
+    if (!b) return;
+    const canEdit = S.user.rol !== 'driver';
+    openModal(`
+      <div class="modal-title">${b.huespedNombre} <span style="color:var(--text-muted);font-size:14px;font-weight:400">#${b.bookingId||'—'}</span></div>
+      <div class="detail-grid">
+        <div class="detail-item"><label>Fecha</label><p>${fdate(b.fecha)}</p></div>
+        <div class="detail-item"><label>Hora</label><p>${b.hora||'—'}</p></div>
+        <div class="detail-item"><label>Tipo de Servicio</label><p>${servicioLabel(b.tipoServicio)}</p></div>
+        <div class="detail-item"><label>Pasajeros</label><p>${b.pasajeros}</p></div>
+        <div class="detail-item detail-full"><label>Origen → Destino</label><p>${b.origenTipo||b.origen||'—'}${b.origenFinal?' ('+b.origenFinal+')':''} → ${b.destino||'—'}</p></div>
+        <div class="detail-item"><label>Vehículo</label><p>${b.vehiculoNombre||'—'}</p></div>
+        <div class="detail-item"><label>Driver</label><p>${b.driverNombre||'Sin asignar'}</p></div>
+        <div class="detail-item"><label>No. de Vuelo</label><p>${b.numeroVuelo||'—'}</p></div>
+        <div class="detail-item"><label>Teléfono</label><p>${b.huespedTelefono||b.huespedContacto||'—'}</p></div>
+        <div class="detail-item"><label>Email</label><p>${b.huespedEmail||'—'}</p></div>
+        <div class="detail-item"><label>Método de Pago</label><p>${metodoLabel(b.metodoPago)}</p></div>
+        <div class="detail-item"><label>Precio</label><p style="font-size:18px;font-weight:800;color:var(--pink)">${fmxn(b.precio)}</p></div>
+        <div class="detail-item"><label>Estatus de Pago</label><p>${badgePago(b.estatusPago)}</p></div>
+        <div class="detail-item"><label>Estatus del Viaje</label><p>${badge(b.estatusViaje)}</p></div>
+        ${b.notas?`<div class="detail-item detail-full"><label>Notas</label><p>${b.notas}</p></div>`:''}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+        ${canEdit?`
+          <button class="btn btn-secondary btn-sm" onclick="closeModal();navigate('nueva',{editId:'${b.id}'})">✏️ Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="confirmDelete('${b.id}','${b.huespedNombre}')">🗑 Eliminar</button>`:''}
+        <button class="btn btn-secondary btn-sm" onclick="closeModal()">Cerrar</button>
+      </div>`);
+  } catch(e) { showToast('Error cargando reservación','error'); }
+}
+
+async function confirmDelete(id, nombre) {
+  closeModal();
+  openModal(`
+    <div class="modal-title">⚠️ Confirmar Eliminación</div>
+    <p style="margin-bottom:20px;color:var(--text-muted)">¿Estás seguro de eliminar la reservación de <strong>${nombre}</strong>? Esta acción no se puede deshacer.</p>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-danger" onclick="deleteBooking('${id}')">Eliminar</button>
+    </div>`);
+}
+
+async function deleteBooking(id) {
+  closeModal();
+  try {
+    await DEL(`/api/bookings/${id}`);
+    showToast('Reservación eliminada','success');
+    if (S.currentView==='calendario')   { await buildCalendarGrid(); await loadDayBookings(S.selDate); }
+    if (S.currentView==='reservaciones') applyFilters();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  VIEW: BOOKING FORM (Create / Edit)
+// ════════════════════════════════════════════════════════════
+async function renderBookingForm(editId=null, prefillDate=null) {
+  editId = editId || null;
+  // Check if opts were passed via navigate
+  const vc = document.getElementById('viewContainer');
+  vc.innerHTML = `<div style="color:var(--text-muted)">Preparando formulario…</div>`;
+  document.getElementById('topbarActions').innerHTML = '';
+
+  let existingBooking = null;
+  if (editId) {
+    try { existingBooking = await GET(`/api/bookings/${editId}`); } catch(e) {}
+  }
+
+  const b = existingBooking || {};
+  const canAssign = ['admin_unico','admin','coordinador'].includes(S.user.rol);
+  const vehicleOptions = S.vehicles.map(v =>
+    `<option value="${v.id}" data-tipo="${v.tipo}" ${b.vehiculoId===v.id?'selected':''}>${v.nombre}</option>`
+  ).join('');
+  const conductorOptions = `<option value="">Sin asignar</option>` + S.drivers.map(c =>
+    `<option value="${c.id}" ${b.driverId===c.id?'selected':''}>${c.nombre}</option>`
+  ).join('');
+
+  // Group tarifario by zone for the select
+  const zones = [...new Set(TARIFARIO.map(t=>t.zona))];
+  const destinoOptions = `<option value="">— Seleccionar destino —</option>` +
+    zones.map(z =>
+      `<optgroup label="Zona ${z}">${
+        TARIFARIO.filter(t=>t.zona===z).map(t=>
+          `<option value="${t.destino}" ${b.destino===t.destino?'selected':''}>${t.destino}</option>`
+        ).join('')
+      }</optgroup>`
+    ).join('');
+
+  const initialPrecio = b.precio || 0;
+  const tipoServicio  = b.tipoServicio || 'traslado';
+
+  vc.innerHTML = `
+    <div class="form-wrap">
+      <h2 style="font-size:16px;font-weight:700;margin-bottom:20px">
+        ${editId ? '✏️ Editar Reservación' : '＋ Nueva Reservación'}
+      </h2>
+
+      <p class="form-section-title">Datos del Huésped</p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre del Huésped *</label>
+          <input type="text" id="f-nombre" value="${b.huespedNombre||''}" placeholder="Nombre completo" required>
+        </div>
+        <div class="form-group">
+          <label>Teléfono *</label>
+          <input type="text" id="f-telefono" value="${b.huespedTelefono||''}" placeholder="984 123 4567">
+        </div>
+        <div class="form-group form-group-full">
+          <label>Correo Electrónico *</label>
+          <input type="email" id="f-email" value="${b.huespedEmail||''}" placeholder="huesped@email.com" required>
+        </div>
+      </div>
+
+      <hr class="section-divider">
+      <p class="form-section-title">Detalles del Servicio</p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Tipo de Servicio *</label>
+          <select id="f-tipo" onchange="onTipoChange()">
+            <option value="traslado" ${tipoServicio==='traslado'?'selected':''}>Traslado</option>
+            <option value="tour"     ${tipoServicio==='tour'?'selected':''}>Tour</option>
+            <option value="por-horas"${tipoServicio==='por-horas'?'selected':''}>Por Horas</option>
+          </select>
+        </div>
+        <div class="form-group" id="horas-group" style="${tipoServicio==='por-horas'?'':'display:none'}">
+          <label>No. de Horas (mín. 3)</label>
+          <input type="number" id="f-horas" value="${b.horas||3}" min="3" max="24" onchange="recalcPrice()">
+        </div>
+        <div class="form-group">
+          <label>Fecha *</label>
+          <input type="date" id="f-fecha" value="${b.fecha||prefillDate||today()}" required>
+        </div>
+        <div class="form-group">
+          <label>Hora *</label>
+          <input type="time" id="f-hora" value="${b.hora||''}">
+        </div>
+        <div class="form-group">
+          <label>Origen *</label>
+          <select id="f-origen-tipo" onchange="onOrigenChange()">
+            <option value="">— Seleccionar —</option>
+            <option value="HXM"    ${(b.origenTipo||b.origen)==='HXM'   ?'selected':''}>HXM</option>
+            <option value="HXM II" ${(b.origenTipo||b.origen)==='HXM II'?'selected':''}>HXM II</option>
+            <option value="HXA"    ${(b.origenTipo||b.origen)==='HXA'   ?'selected':''}>HXA</option>
+            <option value="OTRO"   ${(b.origenTipo==='OTRO'||(!['HXM','HXM II','HXA',''].includes(b.origenTipo||'')))&&b.origen?'selected':''}>OTRO</option>
+          </select>
+        </div>
+        <div class="form-group" id="origen-otro-group" style="${(b.origenTipo==='OTRO'||(!['HXM','HXM II','HXA','',undefined].includes(b.origenTipo)))&&b.origen?'':'display:none'}">
+          <label>Especificar Origen</label>
+          <input type="text" id="f-origen-texto" value="${(!['HXM','HXM II','HXA'].includes(b.origenTipo||''))&&b.origen?b.origen:''}" placeholder="Nombre del hotel o lugar">
+        </div>
+        <div class="form-group" id="destino-select-group" style="${tipoServicio==='por-horas'?'display:none':''}">
+          <label>Destino *</label>
+          <select id="f-destino" onchange="recalcPrice()">${destinoOptions}</select>
+        </div>
+        <div class="form-group" id="destino-text-group" style="${tipoServicio==='por-horas'?'':'display:none'}">
+          <label>Destino / Ruta</label>
+          <input type="text" id="f-destino-text" value="${b.destino||''}" placeholder="Ej: Recorrido por Playa del Carmen">
+        </div>
+        <div class="form-group">
+          <label>No. de Pasajeros *</label>
+          <input type="number" id="f-pasajeros" value="${b.pasajeros||1}" min="1" max="20">
+        </div>
+        <div class="form-group">
+          <label>No. de Vuelo (opcional)</label>
+          <input type="text" id="f-vuelo" value="${b.numeroVuelo||''}" placeholder="AM 123">
+        </div>
+      </div>
+
+      ${canAssign ? `
+      <hr class="section-divider">
+      <p class="form-section-title">Vehículo y Driver</p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Vehículo</label>
+          <select id="f-vehiculo" onchange="recalcPrice()"><option value="">— Seleccionar —</option>${vehicleOptions}</select>
+        </div>
+        <div class="form-group">
+          <label>Driver Asignado</label>
+          <select id="f-conductor">${conductorOptions}</select>
+        </div>
+      </div>` : ''}
+
+      <hr class="section-divider">
+      <p class="form-section-title">Precio y Pago</p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Precio (MXN)</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="number" id="f-precio" value="${initialPrecio}" min="0" style="flex:1" oninput="updatePriceDisplay()">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="recalcPrice()" title="Recalcular del tarifario">↺ Calcular</button>
+          </div>
+          <div class="price-display" id="priceDisplay" style="margin-top:8px">${fmxn(initialPrecio)}</div>
+        </div>
+        <div class="form-group">
+          <label>Método de Pago</label>
+          <select id="f-metodo-pago">
+            <option value="">— Seleccionar —</option>
+            <option value="tarjeta"   ${b.metodoPago==='tarjeta'?'selected':''}>Tarjeta de Crédito</option>
+            <option value="link"      ${b.metodoPago==='link'?'selected':''}>Link</option>
+            <option value="efectivo"  ${b.metodoPago==='efectivo'?'selected':''}>Efectivo</option>
+            <option value="usd"       ${b.metodoPago==='usd'?'selected':''}>USD</option>
+            <option value="club-cash" ${b.metodoPago==='club-cash'?'selected':''}>Club Cash</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Estatus de Pago</label>
+          <select id="f-pago">
+            <option value="pendiente"  ${(b.estatusPago||'pendiente')==='pendiente'?'selected':''}>Pago Pendiente</option>
+            <option value="pagado"     ${b.estatusPago==='pagado'?'selected':''}>Pagado</option>
+            <option value="por-cobrar" ${b.estatusPago==='por-cobrar'?'selected':''}>Por Cobrar</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:4px">
+        <label>Notas Especiales</label>
+        <textarea id="f-notas" placeholder="Silla de bebé, recogida en lobby, nombre en letrero…">${b.notas||''}</textarea>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-secondary" onclick="navigate('${S.user.rol==='driver'?'mis-viajes':'calendario'}')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveBooking(${editId?`'${editId}'`:null})">
+          ${editId ? '💾 Guardar Cambios' : '✅ Crear Reservación'}
+        </button>
+      </div>
+    </div>`;
+}
+
+function onOrigenChange() {
+  const val = document.getElementById('f-origen-tipo')?.value;
+  const otroGroup = document.getElementById('origen-otro-group');
+  if (otroGroup) otroGroup.style.display = val === 'OTRO' ? '' : 'none';
+}
+
+function onTipoChange() {
+  const tipo = document.getElementById('f-tipo').value;
+  const horasGroup       = document.getElementById('horas-group');
+  const destinoSelect    = document.getElementById('destino-select-group');
+  const destinoText      = document.getElementById('destino-text-group');
+  horasGroup.style.display    = tipo==='por-horas' ? '' : 'none';
+  destinoSelect.style.display = tipo==='por-horas' ? 'none' : '';
+  destinoText.style.display   = tipo==='por-horas' ? '' : 'none';
+  recalcPrice();
+}
+
+function recalcPrice() {
+  const tipo     = document.getElementById('f-tipo')?.value;
+  const vSelect  = document.getElementById('f-vehiculo');
+  const selectedOpt = vSelect?.options[vSelect.selectedIndex];
+  const vTipo    = selectedOpt?.dataset?.tipo || '';
+  const destino  = tipo==='por-horas'
+    ? document.getElementById('f-destino-text')?.value || ''
+    : document.getElementById('f-destino')?.value || '';
+  const horas    = parseInt(document.getElementById('f-horas')?.value) || 3;
+
+  const precio   = calcPrice(destino, vTipo, tipo, horas);
+  const input    = document.getElementById('f-precio');
+  const display  = document.getElementById('priceDisplay');
+  if (input)   input.value   = precio;
+  if (display) display.textContent = fmxn(precio);
+}
+
+function updatePriceDisplay() {
+  const val = parseFloat(document.getElementById('f-precio')?.value)||0;
+  const display = document.getElementById('priceDisplay');
+  if (display) display.textContent = fmxn(val);
+}
+
+async function saveBooking(editId=null) {
+  const tipo    = document.getElementById('f-tipo')?.value;
+  const nombre  = document.getElementById('f-nombre')?.value?.trim();
+  const fecha   = document.getElementById('f-fecha')?.value;
+  const vehiculoId = document.getElementById('f-vehiculo')?.value;
+
+  if (!nombre) { showToast('Nombre del huésped requerido','error'); return; }
+  if (!fecha)  { showToast('Fecha requerida','error'); return; }
+
+  const origenTipo  = document.getElementById('f-origen-tipo')?.value || '';
+  const origenTexto = document.getElementById('f-origen-texto')?.value || '';
+  const origenFinal = origenTipo === 'OTRO' ? origenTexto : origenTipo;
+
+  const destino = tipo==='por-horas'
+    ? document.getElementById('f-destino-text')?.value || ''
+    : document.getElementById('f-destino')?.value || '';
+
+  const body = {
+    huespedNombre:   nombre,
+    huespedTelefono: document.getElementById('f-telefono')?.value||'',
+    huespedEmail:    document.getElementById('f-email')?.value||'',
+    tipoServicio:    tipo,
+    origenTipo,
+    origen:          origenFinal,
+    destino,
+    fecha,
+    hora:            document.getElementById('f-hora')?.value||'',
+    pasajeros:       parseInt(document.getElementById('f-pasajeros')?.value)||1,
+    numeroVuelo:     document.getElementById('f-vuelo')?.value||'',
+    vehiculoId:      document.getElementById('f-vehiculo')?.value||'',
+    driverId:        document.getElementById('f-conductor')?.value||'',
+    precio:          parseFloat(document.getElementById('f-precio')?.value)||0,
+    horas:           tipo==='por-horas' ? parseInt(document.getElementById('f-horas')?.value)||3 : 0,
+    metodoPago:      document.getElementById('f-metodo-pago')?.value||'',
+    estatusPago:     document.getElementById('f-pago')?.value||'pendiente',
+    notas:           document.getElementById('f-notas')?.value||'',
+  };
+
+  try {
+    if (editId) {
+      await PUT(`/api/bookings/${editId}`, body);
+      showToast('Reservación actualizada ✅','success');
+    } else {
+      await POST('/api/bookings', body);
+      showToast('Reservación creada ✅','success');
+    }
+    navigate('calendario');
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  VIEW: ESTADO DE DRIVERS
+// ════════════════════════════════════════════════════════════
+let driverStatusInterval = null;
+let dashboardInterval    = null;
+
+async function renderEstadoDrivers() {
+  document.getElementById('topbarActions').innerHTML = '';
+  const vc = document.getElementById('viewContainer');
+  vc.innerHTML = `<div id="driversStatusGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px"></div>`;
+  clearInterval(driverStatusInterval);
+  await loadDriverStatus();
+  driverStatusInterval = setInterval(loadDriverStatus, 30000);
+}
+
+async function loadDriverStatus() {
+  try {
+    const drivers = await GET('/api/drivers');
+    if (!drivers) return;
+    const grid = document.getElementById('driversStatusGrid');
+    if (!grid) { clearInterval(driverStatusInterval); return; }
+    grid.innerHTML = drivers.length === 0
+      ? `<div class="empty-state"><div class="empty-icon">🚗</div><p>No hay drivers registrados</p></div>`
+      : drivers.map(d => {
+          const esServicio  = d.estado === 'en-servicio';
+          const esPendiente = d.estado === 'pendiente';
+          const statusColor = esServicio ? 'var(--blue)' : esPendiente ? 'var(--yellow)' : 'var(--green)';
+          const statusTxt   = esServicio ? 'En Servicio' : esPendiente ? 'Próximo Servicio' : 'Disponible';
+          const statusDot   = esServicio ? 'blue' : esPendiente ? 'yellow' : 'green';
+          return `
+          <div class="card" style="border-left:3px solid ${statusColor}">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+              <div style="width:42px;height:42px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--pink)">
+                ${d.nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+              </div>
+              <div>
+                <div style="font-weight:600;font-size:14px">${d.nombre}</div>
+                <span class="badge badge-${statusDot}" style="font-size:11px">${statusTxt}</span>
+              </div>
+            </div>
+            ${esServicio ? `
+              <div style="background:var(--surface3);border-radius:8px;padding:10px 12px">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">⏱ TIEMPO EN SERVICIO</div>
+                <div style="font-size:22px;font-weight:800;color:var(--blue)">${d.minutos ?? 0} min</div>
+                ${d.destino ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px">📍 ${d.destino}</div>` : ''}
+                ${d.refId ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">ID ${d.refId}</div>` : ''}
+              </div>` : ''}
+            ${esPendiente ? `
+              <div style="background:rgba(245,158,11,.08);border-radius:8px;padding:10px 12px">
+                <div style="font-size:11px;color:var(--yellow);margin-bottom:4px">🔔 SALIDA EN MENOS DE 1 HORA</div>
+                ${d.destino ? `<div style="font-size:12px;color:var(--text-muted)">📍 ${d.destino}</div>` : ''}
+                ${d.refId ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">ID ${d.refId}</div>` : ''}
+              </div>` : ''}
+          </div>`;
+        }).join('');
+  } catch(e) { /* silencioso */ }
+}
+
+// ════════════════════════════════════════════════════════════
+//  VIEW: MIS VIAJES (Driver)
+// ════════════════════════════════════════════════════════════
+async function renderMisViajes() {
+  document.getElementById('topbarActions').innerHTML = '';
+  const vc = document.getElementById('viewContainer');
+  vc.innerHTML = `
+    <div class="filters-bar">
+      <select id="viajeFilter" onchange="loadMisViajes()">
+        <option value="hoy">Hoy</option>
+        <option value="proximos">Próximos 7 días</option>
+        <option value="todos">Todos</option>
+      </select>
+    </div>
+    <div id="misViajesList"><div style="color:var(--text-muted)">Cargando…</div></div>`;
+  await loadMisViajes();
+}
+
+async function loadMisViajes() {
+  const filter   = document.getElementById('viajeFilter')?.value || 'hoy';
+  const todayStr = today();
+  let bkUrl = '/api/bookings';
+  let wUrl  = '/api/welcomes';
+  if (filter === 'hoy') { bkUrl += `?fecha=${todayStr}`; wUrl += `?fecha=${todayStr}`; }
+  try {
+    let [bks, wels] = await Promise.all([ GET(bkUrl), GET(wUrl) ]);
+    bks  = (bks  || []).map(b => ({ ...b, _type:'booking' }));
+    wels = (wels || []).map(w => ({ ...w, _type:'welcome' }));
+    let items = [...bks, ...wels];
+    if (filter === 'proximos') {
+      const limitMs  = new Date().getTime() + 7 * 86400000;
+      const limitStr = new Intl.DateTimeFormat('en-CA', {timeZone: CANCUN_TZ}).format(new Date(limitMs));
+      items = items.filter(x => x.fecha >= todayStr && x.fecha <= limitStr);
+    }
+    items.sort((a, b) => {
+      const da = (a.fecha||'') + (a.hora||'00:00');
+      const db = (b.fecha||'') + (b.hora||'00:00');
+      return da.localeCompare(db);
+    });
+    const list = document.getElementById('misViajesList');
+    if (!list) return;
+    list.innerHTML = items.length === 0
+      ? `<div class="empty-state"><div class="empty-icon">🗺️</div><p>Sin viajes asignados</p></div>`
+      : items.map(item => item._type === 'welcome' ? welcomeTripCard(item) : tripCard(item)).join('');
+  } catch(e) { showToast('Error','error'); }
+}
+
+function tripCard(b) {
+  const isActive = b.estatusViaje==='pendiente'||b.estatusViaje==='en-camino';
+  return `
+    <div class="trip-card status-${b.estatusViaje}" id="trip-${b.id}">
+      <div class="trip-header">
+        <div>
+          <div class="trip-guest">${b.huespedNombre||'Sin nombre'} <span style="color:var(--text-muted);font-size:11px;font-weight:400">#${b.bookingId||'—'}</span></div>
+          <div class="trip-datetime">${fdate(b.fecha)} — ${b.hora||'--:--'} — ${servicioLabel(b.tipoServicio)}</div>
+        </div>
+        ${badge(b.estatusViaje)}
+      </div>
+      <div class="trip-info-grid">
+        <div class="trip-info-item"><label>Origen</label><p>${b.origenTipo||b.origen||'—'}${b.origenFinal?' — '+b.origenFinal:''}</p></div>
+        <div class="trip-info-item"><label>Destino</label><p>${b.destino||'—'}</p></div>
+        <div class="trip-info-item"><label>Pasajeros</label><p>${b.pasajeros} pax</p></div>
+        <div class="trip-info-item"><label>Vehículo</label><p>${b.vehiculoNombre||'—'}</p></div>
+        <div class="trip-info-item"><label>No. de Vuelo</label><p>${b.numeroVuelo||'—'}</p></div>
+        <div class="trip-info-item"><label>Teléfono</label><p>${b.huespedTelefono||b.huespedContacto||'—'}</p></div>
+        ${b.huespedEmail?`<div class="trip-info-item"><label>Email</label><p>${b.huespedEmail}</p></div>`:''}
+      </div>
+      ${b.notas?`<div class="trip-notes">📝 ${b.notas}</div>`:''}
+      ${isActive?`
+        <div class="trip-actions">
+          ${b.estatusViaje==='pendiente'?`
+            <button class="btn btn-primary btn-sm" style="font-weight:700;letter-spacing:.5px" onclick="updateTripStatus('${b.id}','en-camino')">
+              🚗 INICIANDO SERVICIO
+            </button>` : ''}
+          ${b.estatusViaje==='en-camino'?`
+            <button class="btn btn-success btn-sm" style="font-weight:700;letter-spacing:.5px" onclick="updateTripStatus('${b.id}','completado')">
+              ✅ SERVICIO FINALIZADO
+            </button>
+            ${esOrigenHotel(b)?`
+            <button class="btn btn-sm" style="background:rgba(234,20,129,.15);color:var(--pink);border:1px solid rgba(234,20,129,.3);font-weight:700" onclick="updateTripStatus('${b.id}','en-hotel')">
+              🏨 EN EL HOTEL
+            </button>` : ''}` : ''}
+          <button class="btn btn-danger btn-sm" onclick="updateTripStatus('${b.id}','no-show')">❌ No Show</button>
+        </div>`:''}
+    </div>`;
+}
+
+function welcomeTripCard(w) {
+  const isActive = w.estatusViaje === 'pendiente' || w.estatusViaje === 'en-camino';
+  return `
+    <div class="trip-card status-${w.estatusViaje} welcome-card" id="trip-${w.id}">
+      <div class="trip-header">
+        <div>
+          <div class="trip-guest">${w.nombre||'Sin nombre'} <span style="color:var(--text-muted);font-size:11px;font-weight:400">#${w.welcomeId||'—'}</span> <span class="welcome-tag">🎫 WELCOME</span></div>
+          <div class="trip-datetime">${fdate(w.fecha)} — ${w.hora||'--:--'}</div>
+        </div>
+        ${badge(w.estatusViaje)}
+      </div>
+      <div class="trip-info-grid">
+        <div class="trip-info-item"><label>Destino</label><p>${w.destino||'—'}</p></div>
+        <div class="trip-info-item"><label># Invitación</label><p>${w.numeroInvitacion||'—'}</p></div>
+        <div class="trip-info-item"><label>Folio</label><p>${w.folio||'—'}</p></div>
+        <div class="trip-info-item"><label>Costo</label><p style="font-weight:700;color:#06b6d4">${fmxn(w.costo)}</p></div>
+      </div>
+      ${isActive ? `
+        <div class="trip-actions">
+          ${w.estatusViaje==='pendiente' ? `
+            <button class="btn btn-primary btn-sm" style="font-weight:700;letter-spacing:.5px" onclick="updateTripStatus('${w.id}','en-camino','welcome')">
+              🎫 INICIANDO SERVICIO
+            </button>` : ''}
+          ${w.estatusViaje==='en-camino' ? `
+            <button class="btn btn-success btn-sm" style="font-weight:700;letter-spacing:.5px" onclick="updateTripStatus('${w.id}','completado','welcome')">
+              ✅ SERVICIO FINALIZADO
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="updateTripStatus('${w.id}','no-show','welcome')">❌ No Show</button>` : ''}
+        </div>` : ''}
+    </div>`;
+}
+
+async function updateTripStatus(id, status, type='booking') {
+  try {
+    const apiUrl = type === 'welcome' ? `/api/welcomes/${id}` : `/api/bookings/${id}`;
+    await PUT(apiUrl, { estatusViaje: status });
+    showToast(`Estatus actualizado: ${statusLabel(status)}`, 'success');
+    await loadMisViajes();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  VIEW: WELCOME
+// ════════════════════════════════════════════════════════════
+async function renderWelcome() {
+  const canCreate = ['admin_unico','admin','coordinador'].includes(S.user.rol);
+  document.getElementById('topbarActions').innerHTML = canCreate
+    ? `<button class="btn btn-primary btn-sm" onclick="navigate('nuevo-welcome')">🎫 Nuevo Welcome</button>`
+    : '';
+  const vc = document.getElementById('viewContainer');
+  vc.innerHTML = `
+    <div class="filters-bar" style="flex-wrap:wrap;gap:8px">
+      <input type="date" id="wFilterFecha" value="${today()}" onchange="loadWelcomes()" title="Filtrar por fecha">
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('wFilterFecha').value='';loadWelcomes()">Ver todos</button>
+    </div>
+    <div id="welcomeList"><div style="color:var(--text-muted)">Cargando…</div></div>`;
+  await loadWelcomes();
+}
+
+async function loadWelcomes() {
+  const fecha = document.getElementById('wFilterFecha')?.value || '';
+  let url = '/api/welcomes';
+  if (fecha) url += `?fecha=${fecha}`;
+  try {
+    const wels = (await GET(url)) || [];
+    const list = document.getElementById('welcomeList');
+    if (!list) return;
+    list.innerHTML = wels.length === 0
+      ? `<div class="empty-state"><div class="empty-icon">🎫</div><p>Sin registros Welcome</p></div>`
+      : `<div class="booking-list">${wels.map(w => welcomeCard(w, true)).join('')}</div>`;
+  } catch(e) { showToast('Error cargando registros Welcome','error'); }
+}
+
+function welcomeCard(w, clickable=true) {
+  const onclick = clickable ? `onclick="openWelcomeDetail('${w.id}')"` : '';
+  return `
+    <div class="booking-card welcome-card" ${onclick} style="cursor:${clickable?'pointer':'default'}">
+      <div class="booking-card-row booking-card-top">
+        <span class="booking-guest">${w.nombre||'Sin nombre'} <span style="color:var(--text-muted);font-size:11px;font-weight:400">#${w.welcomeId||'—'}</span></span>
+        <span class="booking-time">${w.hora||'--:--'}</span>
+        <span class="welcome-tag">🎫 WELCOME</span>
+      </div>
+      <div class="booking-meta">
+        <span>📅 ${fdate(w.fecha)}</span>
+        <span>📍 ${w.destino||'—'}</span>
+        <span>👤 ${w.driverNombre||'Sin asignar'}</span>
+        ${w.numeroInvitacion?`<span>🎟️ Inv. ${w.numeroInvitacion}</span>`:''}
+        ${w.folio?`<span>📄 ${w.folio}</span>`:''}
+        <span class="booking-price">${fmxn(w.costo)}</span>
+      </div>
+    </div>`;
+}
+
+async function openWelcomeDetail(id) {
+  try {
+    const w = await GET(`/api/welcomes/${id}`);
+    if (!w) return;
+    const canEdit   = ['admin_unico','admin','coordinador'].includes(S.user.rol);
+    const canDelete = S.user.rol === 'admin_unico';
+    openModal(`
+      <div class="modal-title">${w.nombre} <span style="color:var(--text-muted);font-size:14px;font-weight:400">#${w.welcomeId||'—'}</span></div>
+      <div class="detail-grid">
+        <div class="detail-item"><label>Fecha</label><p>${fdate(w.fecha)}</p></div>
+        <div class="detail-item"><label>Hora</label><p>${w.hora||'—'}</p></div>
+        <div class="detail-item"><label>Destino</label><p>${w.destino||'—'}</p></div>
+        <div class="detail-item"><label># Invitación</label><p>${w.numeroInvitacion||'—'}</p></div>
+        <div class="detail-item"><label>Folio</label><p>${w.folio||'—'}</p></div>
+        <div class="detail-item"><label>Driver</label><p>${w.driverNombre||'Sin asignar'}</p></div>
+        <div class="detail-item"><label>Costo</label><p style="font-size:18px;font-weight:800;color:#06b6d4">${fmxn(w.costo)}</p></div>
+        <div class="detail-item"><label>Estatus</label><p>${badge(w.estatusViaje)}</p></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+        ${canEdit?`<button class="btn btn-secondary btn-sm" onclick="closeModal();navigate('nuevo-welcome',{editId:'${w.id}'})">✏️ Editar</button>`:''}
+        ${canDelete?`<button class="btn btn-danger btn-sm" onclick="confirmDeleteWelcome('${w.id}','${w.nombre}')">🗑 Eliminar</button>`:''}
+        <button class="btn btn-secondary btn-sm" onclick="closeModal()">Cerrar</button>
+      </div>`);
+  } catch(e) { showToast('Error cargando Welcome','error'); }
+}
+
+async function renderWelcomeForm(editId=null) {
+  const vc = document.getElementById('viewContainer');
+  vc.innerHTML = `<div style="color:var(--text-muted)">Preparando formulario…</div>`;
+  document.getElementById('topbarActions').innerHTML = '';
+
+  let existing = null;
+  if (editId) {
+    try { existing = await GET(`/api/welcomes/${editId}`); } catch(e) {}
+  }
+  const w = existing || {};
+
+  const driverOptions = `<option value="">Sin asignar</option>` + S.drivers.map(d =>
+    `<option value="${d.id}" ${w.driverId===d.id?'selected':''}>${d.nombre}</option>`
+  ).join('');
+
+  vc.innerHTML = `
+    <div class="form-wrap">
+      <h2 style="font-size:16px;font-weight:700;margin-bottom:20px">
+        ${editId ? '✏️ Editar Welcome' : '🎫 Nuevo Welcome'}
+      </h2>
+      <p class="form-section-title">Datos del Registro</p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre del Huésped *</label>
+          <input type="text" id="wf-nombre" value="${w.nombre||''}" placeholder="Nombre completo">
+        </div>
+        <div class="form-group">
+          <label>Fecha *</label>
+          <input type="date" id="wf-fecha" value="${w.fecha||today()}">
+        </div>
+        <div class="form-group">
+          <label>Hora</label>
+          <input type="time" id="wf-hora" value="${w.hora||''}">
+        </div>
+        <div class="form-group">
+          <label># Invitación</label>
+          <input type="text" id="wf-invitacion" value="${w.numeroInvitacion||''}" placeholder="Número de invitación">
+        </div>
+        <div class="form-group">
+          <label>Destino</label>
+          <input type="text" id="wf-destino" value="${w.destino||''}" placeholder="Destino del servicio">
+        </div>
+        <div class="form-group">
+          <label>Costo (MXN)</label>
+          <input type="number" id="wf-costo" value="${w.costo||0}" min="0">
+        </div>
+        <div class="form-group">
+          <label>Driver Asignado</label>
+          <select id="wf-driver">${driverOptions}</select>
+        </div>
+        <div class="form-group">
+          <label>Folio (XO + dígitos)</label>
+          <input type="text" id="wf-folio" value="${w.folio||''}" placeholder="XO-1234">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" onclick="navigate('welcome')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveWelcome(${editId?`'${editId}'`:null})">
+          ${editId ? '💾 Guardar Cambios' : '✅ Crear Welcome'}
+        </button>
+      </div>
+    </div>`;
+}
+
+async function saveWelcome(editId=null) {
+  const nombre   = document.getElementById('wf-nombre')?.value?.trim();
+  const fecha    = document.getElementById('wf-fecha')?.value;
+  const hora     = document.getElementById('wf-hora')?.value    || '';
+  const invit    = document.getElementById('wf-invitacion')?.value?.trim() || '';
+  const destino  = document.getElementById('wf-destino')?.value?.trim()   || '';
+  const costo    = parseFloat(document.getElementById('wf-costo')?.value) || 0;
+  const driverId = document.getElementById('wf-driver')?.value  || '';
+  const folio    = document.getElementById('wf-folio')?.value?.trim()     || '';
+  if (!nombre) { showToast('Nombre requerido','error'); return; }
+  if (!fecha)  { showToast('Fecha requerida','error');  return; }
+  const body = { nombre, fecha, hora, numeroInvitacion:invit, destino, costo, driverId, folio };
+  try {
+    if (editId) {
+      await PUT(`/api/welcomes/${editId}`, body);
+      showToast('Welcome actualizado ✅','success');
+    } else {
+      await POST('/api/welcomes', body);
+      showToast('Welcome creado ✅','success');
+    }
+    navigate('welcome');
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function confirmDeleteWelcome(id, nombre) {
+  closeModal();
+  openModal(`
+    <div class="modal-title">⚠️ Eliminar Welcome</div>
+    <p style="margin-bottom:20px;color:var(--text-muted)">¿Eliminar el registro de <strong>${nombre}</strong>? Esta acción no se puede deshacer.</p>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-danger" onclick="deleteWelcome('${id}')">Eliminar</button>
+    </div>`);
+}
+
+async function deleteWelcome(id) {
+  closeModal();
+  try {
+    await DEL(`/api/welcomes/${id}`);
+    showToast('Welcome eliminado','success');
+    await loadWelcomes();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  VIEW: USUARIOS (Admin)
+// ════════════════════════════════════════════════════════════
+async function renderUsuarios() {
+  const esUnico = S.user.rol === 'admin_unico';
+  document.getElementById('topbarActions').innerHTML = esUnico
+    ? `<button class="btn btn-primary btn-sm" onclick="openUserModal()">＋ Nuevo Usuario</button>`
+    : '';
+  const vc = document.getElementById('viewContainer');
+  vc.innerHTML = `<div style="color:var(--text-muted)">Cargando…</div>`;
+  try {
+    const users = (await GET('/api/users')) || [];
+    S.users = users;
+    vc.innerHTML = `
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Nombre</th><th>Usuario</th><th>Rol</th><th style="text-align:right">Acciones</th>
+            </tr></thead>
+            <tbody>${users.map(u=>`
+              <tr>
+                <td><strong>${u.nombre}</strong></td>
+                <td><span class="tag">@${u.username}</span></td>
+                <td>${ROL_LABEL[u.rol]||u.rol}</td>
+                <td><div class="td-actions">
+                  <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.id}')">✏️ Editar</button>
+                  ${S.user.rol==='admin_unico'&&u.id!==S.user.id?`<button class="btn btn-danger btn-sm" onclick="confirmDeleteUser('${u.id}','${u.nombre}')">🗑</button>`:''}
+                </div></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  } catch(e) { showToast('Error cargando usuarios','error'); }
+}
+
+function openUserModal(userId=null) {
+  const u = userId ? S.users.find(u=>u.id===userId) : null;
+  openModal(`
+    <div class="modal-title">${u?'Editar Usuario':'Nuevo Usuario'}</div>
+    <div class="form-group" style="margin-bottom:12px"><label>Nombre Completo *</label>
+      <input type="text" id="um-nombre" value="${u?.nombre||''}" placeholder="Carlos López">
+    </div>
+    <div class="form-group" style="margin-bottom:12px"><label>Nombre de Usuario *</label>
+      <input type="text" id="um-username" value="${u?.username||''}" placeholder="carlos.lopez" autocomplete="off">
+    </div>
+    <div class="form-group" style="margin-bottom:12px"><label>${u?'Nueva Contraseña (dejar vacío para no cambiar)':'Contraseña *'}</label>
+      <input type="password" id="um-password" placeholder="••••••••" autocomplete="new-password">
+    </div>
+    <div class="form-group" style="margin-bottom:20px"><label>Rol *</label>
+      ${u?.rol==='admin_unico'
+        ? `<div style="padding:8px 12px;background:rgba(234,20,129,.08);border:1px solid rgba(234,20,129,.25);border-radius:8px;color:var(--pink);font-weight:600;font-size:13px">
+             🔒 Cuenta Maestra — rol bloqueado
+           </div>
+           <input type="hidden" id="um-rol" value="admin_unico">`
+        : `<select id="um-rol">
+             <option value="admin"        ${u?.rol==='admin'?'selected':''}>Administrador</option>
+             <option value="coordinador"  ${u?.rol==='coordinador'?'selected':''}>Coordinador</option>
+             <option value="asesor"       ${u?.rol==='asesor'?'selected':''}>Asesor de Ventas</option>
+             <option value="driver"       ${u?.rol==='driver'?'selected':''}>Driver</option>
+           </select>`}
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUser(${userId?`'${userId}'`:null})">
+        ${u?'Guardar Cambios':'Crear Usuario'}
+      </button>
+    </div>`);
+}
+
+async function saveUser(userId=null) {
+  const nombre   = document.getElementById('um-nombre')?.value?.trim();
+  const username = document.getElementById('um-username')?.value?.trim();
+  const password = document.getElementById('um-password')?.value;
+  const rol      = document.getElementById('um-rol')?.value;
+  if (!nombre||!username||!rol) { showToast('Completa todos los campos requeridos','error'); return; }
+  if (!userId && !password)     { showToast('La contraseña es requerida para nuevos usuarios','error'); return; }
+  try {
+    const body = { nombre, username, rol, ...(password?{password}:{}) };
+    if (userId) {
+      await PUT(`/api/users/${userId}`, body);
+      showToast('Usuario actualizado ✅','success');
+    } else {
+      await POST('/api/users', body);
+      showToast('Usuario creado ✅','success');
+    }
+    closeModal();
+    renderUsuarios();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function confirmDeleteUser(id, nombre) {
+  openModal(`
+    <div class="modal-title">⚠️ Eliminar Usuario</div>
+    <p style="margin-bottom:20px;color:var(--text-muted)">¿Eliminar a <strong>${nombre}</strong>?</p>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-danger" onclick="deleteUser('${id}')">Eliminar</button>
+    </div>`);
+}
+
+async function deleteUser(id) {
+  closeModal();
+  try {
+    await DEL(`/api/users/${id}`);
+    showToast('Usuario eliminado','success');
+    renderUsuarios();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  VIEW: VEHICULOS (Admin)
+// ════════════════════════════════════════════════════════════
+async function renderVehiculos() {
+  document.getElementById('topbarActions').innerHTML = '';
+  const vc = document.getElementById('viewContainer');
+  vc.innerHTML = `<div style="color:var(--text-muted)">Cargando…</div>`;
+  const vehicles = (await GET('/api/vehicles')) || [];
+  S.vehicles = vehicles;
+  vc.innerHTML = `
+    <div class="card">
+      <div style="margin-bottom:12px;color:var(--text-muted);font-size:13px">
+        Haz clic en <strong>Editar Placa</strong> para actualizar la información de cada vehículo.
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Nombre</th><th>Tipo</th><th>Capacidad</th><th>Placa</th><th style="text-align:right">Acciones</th>
+          </tr></thead>
+          <tbody>${vehicles.map(v=>`
+            <tr>
+              <td><strong>${v.nombre}</strong></td>
+              <td><span class="tag">${TIPO_LABEL[v.tipo]||v.tipo}</span></td>
+              <td>${v.capacidad} pax</td>
+              <td id="placa-${v.id}">${v.placa||'<span style="color:var(--text-muted)">Sin placa</span>'}</td>
+              <td><div class="td-actions">
+                <button class="btn btn-secondary btn-sm" onclick="editVehiculo('${v.id}','${v.nombre}','${v.placa||''}')">✏️ Editar Placa</button>
+              </div></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function editVehiculo(id, nombre, placa) {
+  openModal(`
+    <div class="modal-title">🚗 ${nombre}</div>
+    <div class="form-group" style="margin-bottom:20px">
+      <label>Número de Placa</label>
+      <input type="text" id="vm-placa" value="${placa}" placeholder="Ej: QOO-12-34" style="text-transform:uppercase">
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveVehiculo('${id}')">Guardar</button>
+    </div>`);
+}
+
+async function saveVehiculo(id) {
+  const placa = document.getElementById('vm-placa')?.value?.trim().toUpperCase();
+  try {
+    await PUT(`/api/vehicles/${id}`, { placa });
+    showToast('Placa actualizada ✅','success');
+    closeModal();
+    renderVehiculos();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  NAVIGATE OVERRIDE (support opts)
+// ════════════════════════════════════════════════════════════
+// Handle editId option from booking detail modal
+const _originalNavigate = navigate;
+window.navigate = function(viewId, opts={}) {
+  if (viewId==='nueva' && opts.editId) {
+    clearInterval(driverStatusInterval); driverStatusInterval = null;
+    clearInterval(dashboardInterval);    dashboardInterval    = null;
+    S.currentView = 'nueva';
+    setActiveNav('nueva');
+    document.getElementById('pageTitle').textContent = 'Editar Reservación';
+    document.getElementById('topbarActions').innerHTML = '';
+    renderBookingForm(opts.editId, null);
+    return;
+  }
+  if (viewId==='nuevo-welcome' && opts.editId) {
+    clearInterval(driverStatusInterval); driverStatusInterval = null;
+    clearInterval(dashboardInterval);    dashboardInterval    = null;
+    S.currentView = 'nuevo-welcome';
+    setActiveNav('welcome');
+    document.getElementById('pageTitle').textContent = 'Editar Welcome';
+    document.getElementById('topbarActions').innerHTML = '';
+    renderWelcomeForm(opts.editId);
+    return;
+  }
+  _originalNavigate(viewId, opts);
+};
+
+// ════════════════════════════════════════════════════════════
+//  APP INIT
+// ════════════════════════════════════════════════════════════
+async function initApp() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+
+  // Set user info in sidebar
+  const initials = S.user.nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('userAvatar').textContent    = initials;
+  document.getElementById('userName').textContent      = S.user.nombre;
+  document.getElementById('userRoleBadge').textContent = ROL_LABEL[S.user.rol]||S.user.rol;
+
+  // Build navigation
+  buildNav();
+
+  // Preload shared data
+  await preloadData();
+
+  // Navigate to default view for role
+  const defaultView = {
+    admin_unico: 'dashboard', admin: 'dashboard',
+    coordinador: 'calendario', asesor: 'calendario',
+    driver: 'mis-viajes'
+  };
+  navigate(defaultView[S.user.rol]||'calendario');
+}
+
+// ════════════════════════════════════════════════════════════
+//  EVENT LISTENERS
+// ════════════════════════════════════════════════════════════
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const u = document.getElementById('loginUsername').value.trim();
+  const p = document.getElementById('loginPassword').value;
+  await doLogin(u, p);
+});
+
+document.getElementById('logoutBtn').addEventListener('click', doLogout);
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+// ════════════════════════════════════════════════════════════
+//  STARTUP — Check existing session
+// ════════════════════════════════════════════════════════════
+(async () => {
+  try {
+    const user = await GET('/api/me');
+    if (user) { S.user = user; await initApp(); }
+    else showLoginScreen();
+  } catch(e) { showLoginScreen(); }
+})();
+</script>
+</body>
+</html>

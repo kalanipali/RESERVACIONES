@@ -1,0 +1,169 @@
+{
+  "users": [
+    {
+      "id": "u1",
+      "username": "admin",
+      "password": "77e589195dc43d812237b7d51e71d019b35329fc57c871708c9a19a2c1a54b2f",
+      "nombre": "Kalani",
+      "rol": "admin_unico"
+    },
+    {
+      "id": "u2",
+      "username": "ANDREA",
+      "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "nombre": "ANDREA",
+      "rol": "coordinador"
+    },
+    {
+      "id": "u3",
+      "username": "FERNANDO",
+      "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "nombre": "FERNANDO MAZA",
+      "rol": "driver"
+    },
+    {
+      "id": "u4",
+      "username": "conductor2",
+      "password": "77e589195dc43d812237b7d51e71d019b35329fc57c871708c9a19a2c1a54b2f",
+      "nombre": "Miguel Hernández",
+      "rol": "conductor"
+    }
+  ],
+  "vehicles": [
+    {
+      "id": "v1",
+      "nombre": "Sedan 1",
+      "tipo": "sedan",
+      "capacidad": 3
+    },
+    {
+      "id": "v2",
+      "nombre": "Sedan 2",
+      "tipo": "sedan",
+      "capacidad": 3
+    },
+    {
+      "id": "v3",
+      "nombre": "Sedan 3",
+      "tipo": "sedan",
+      "capacidad": 3
+    },
+    {
+      "id": "v4",
+      "nombre": "Sedan 4",
+      "tipo": "sedan",
+      "capacidad": 3
+    },
+    {
+      "id": "v5",
+      "nombre": "Sedan 5",
+      "tipo": "sedan",
+      "capacidad": 3
+    },
+    {
+      "id": "v6",
+      "nombre": "Sedan 6",
+      "tipo": "sedan",
+      "capacidad": 3
+    },
+    {
+      "id": "v7",
+      "nombre": "Minivan (5 Pax)",
+      "tipo": "minivan",
+      "capacidad": 5
+    },
+    {
+      "id": "v8",
+      "nombre": "Suburban Chevrolet",
+      "tipo": "suburban",
+      "capacidad": 5
+    },
+    {
+      "id": "v9",
+      "nombre": "Urvan 1 (13 Pax)",
+      "tipo": "van13",
+      "capacidad": 13
+    },
+    {
+      "id": "v10",
+      "nombre": "Urvan 2 (13 Pax)",
+      "tipo": "van13",
+      "capacidad": 13
+    }
+  ],
+  "bookings": [
+    {
+      "id": "5892a15c-30d4-492b-9675-4aa465de541d",
+      "bookingId": "0001",
+      "huespedNombre": "Prueba",
+      "huespedTelefono": "9988393",
+      "huespedEmail": "prueba@gmail.com",
+      "tipoServicio": "traslado",
+      "origenTipo": "HXM",
+      "origen": "HXM",
+      "destino": "Playa del Carmen",
+      "fecha": "2026-04-29",
+      "hora": "11:00",
+      "pasajeros": 2,
+      "numeroVuelo": "",
+      "vehiculoId": "v2",
+      "driverId": "u3",
+      "precio": 650,
+      "horas": 0,
+      "metodoPago": "link",
+      "estatusPago": "pagado",
+      "estatusViaje": "pendiente",
+      "serviceStartTime": null,
+      "notas": "",
+      "creadoPor": "u1",
+      "creadoEn": "2026-04-05T00:02:08.614Z"
+    },
+    {
+      "id": "218e0154-5dbb-4960-ba00-3ed8f708213d",
+      "bookingId": "0002",
+      "huespedNombre": "Prueba",
+      "huespedTelefono": "9988393",
+      "huespedEmail": "GAKI@GMAIL.COM",
+      "tipoServicio": "traslado",
+      "origenTipo": "HXM II",
+      "origen": "HXM II",
+      "destino": "Princess / Mayakobá / Gran Velas / Hyatt Zylara / Blue Bay / Blue Diamond",
+      "fecha": "2026-04-05",
+      "hora": "15:00",
+      "pasajeros": 1,
+      "numeroVuelo": "",
+      "vehiculoId": "v2",
+      "driverId": "u3",
+      "precio": 900,
+      "horas": 0,
+      "metodoPago": "efectivo",
+      "estatusPago": "pagado",
+      "estatusViaje": "pendiente",
+      "serviceStartTime": null,
+      "notas": "",
+      "creadoPor": "u1",
+      "creadoEn": "2026-04-05T19:27:51.869Z"
+    }
+  ],
+  "bookingCounter": 2,
+  "welcomeCounter": 1,
+  "welcomes": [
+    {
+      "id": "c2a6186b-9a8f-475c-8ef7-90c4e5104971",
+      "welcomeId": "W0001",
+      "nombre": "Yussif",
+      "fecha": "2026-04-05",
+      "numeroInvitacion": "1234",
+      "destino": "Xailing",
+      "costo": 1500,
+      "driverId": "u3",
+      "hora": "17:00",
+      "folio": "X01234",
+      "estatusViaje": "pendiente",
+      "serviceStartTime": null,
+      "serviceEndTime": null,
+      "creadoPor": "u1",
+      "creadoEn": "2026-04-05T19:33:13.292Z"
+    }
+  ]
+}
