@@ -2816,7 +2816,8 @@ async function renderRelojChecador() {
       <div class="card" style="text-align:center;padding:28px 24px;margin-bottom:16px">
         <div id="ck-time" style="font-size:48px;font-weight:900;color:var(--text);letter-spacing:2px;font-variant-numeric:tabular-nums">--:--:--</div>
         <div id="ck-date" style="font-size:14px;color:var(--text-muted);margin-top:4px">—</div>
-        <div id="ck-loc"  style="font-size:11px;color:var(--text-muted);margin-top:6px">📍 Obteniendo ubicación…</div>
+        <!-- Banner de estado GPS -->
+        <div id="ck-gps-banner" style="margin-top:14px"></div>
       </div>
 
       <!-- Botones -->
@@ -2851,30 +2852,130 @@ async function renderRelojChecador() {
   tickClock();
   _clockInterval = setInterval(tickClock, 1000);
 
-  // Intentar obtener GPS
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const { latitude: lat, longitude: lng, accuracy } = pos.coords;
-        S._ckLat = lat; S._ckLng = lng; S._ckAccuracy = accuracy;
-        const el = document.getElementById('ck-loc');
-        if (el) el.textContent = `📍 GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)} (±${Math.round(accuracy)}m)`;
-      },
-      () => {
-        S._ckLat = null; S._ckLng = null; S._ckAccuracy = null;
-        const el = document.getElementById('ck-loc');
-        if (el) el.textContent = '📍 Ubicación no disponible (se registrará solo IP)';
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    );
-  } else {
-    S._ckLat = null; S._ckLng = null;
-    const el = document.getElementById('ck-loc');
-    if (el) el.textContent = '📍 GPS no soportado en este dispositivo';
-  }
+  // Iniciar obtención de GPS
+  _ckSetGpsBanner('buscando');
+  _ckSolicitarGPS();
 
   // Cargar historial
   await _loadChecadasDriver();
+}
+
+// ─── GPS HELPERS ──────────────────────────────────────────────────────────────
+function _ckSetGpsBanner(estado, detalle) {
+  const banner = document.getElementById('ck-gps-banner');
+  if (!banner) return;
+
+  const estiloBase = 'border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;text-align:left;display:flex;align-items:flex-start;gap:10px;';
+
+  if (estado === 'buscando') {
+    banner.innerHTML = `
+      <div style="${estiloBase}background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.2);color:var(--blue)">
+        <span style="font-size:18px;flex-shrink:0">⏳</span>
+        <div>
+          <div>Obteniendo ubicación GPS…</div>
+          <div style="font-size:11px;font-weight:400;color:var(--text-muted);margin-top:2px">Por favor espera unos segundos</div>
+        </div>
+      </div>`;
+
+  } else if (estado === 'ok') {
+    banner.innerHTML = `
+      <div style="${estiloBase}background:rgba(22,163,74,.08);border:1px solid rgba(22,163,74,.2);color:var(--green)">
+        <span style="font-size:18px;flex-shrink:0">📍</span>
+        <div>
+          <div>Ubicación activa — GPS listo</div>
+          <div style="font-size:11px;font-weight:400;color:var(--text-muted);margin-top:2px">${detalle||''}</div>
+        </div>
+      </div>`;
+
+  } else if (estado === 'denegado') {
+    // Detectar si es iOS o Android para dar instrucciones específicas
+    const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const esAndroid = /Android/.test(navigator.userAgent);
+    let instrucciones = '';
+    if (esIOS) {
+      instrucciones = '<strong>iOS:</strong> Configuración → Safari → Ubicación → Permitir';
+    } else if (esAndroid) {
+      instrucciones = '<strong>Android:</strong> Toca el ícono 🔒 junto a la URL → Permisos → Ubicación → Permitir';
+    } else {
+      instrucciones = 'Haz clic en el ícono 🔒 o 🌐 junto a la URL del navegador → Permisos de ubicación → Permitir';
+    }
+    banner.innerHTML = `
+      <div style="${estiloBase}background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.25);color:var(--red);flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <span style="font-size:20px;flex-shrink:0">🚫</span>
+          <div>
+            <div style="font-size:13px">Acceso a ubicación denegado</div>
+            <div style="font-size:11px;font-weight:400;color:var(--text-muted);margin-top:3px">
+              El GPS es obligatorio para registrar la checada. Por favor actívalo:
+            </div>
+          </div>
+        </div>
+        <div style="background:rgba(220,38,38,.06);border-radius:7px;padding:8px 10px;font-size:11px;font-weight:500;color:#7f1d1d;line-height:1.6">
+          ${instrucciones}
+        </div>
+        <button onclick="_ckSolicitarGPS()" style="width:100%;padding:10px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+          📍 Reintentar — Compartir Ubicación
+        </button>
+      </div>`;
+
+  } else if (estado === 'timeout') {
+    banner.innerHTML = `
+      <div style="${estiloBase}background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);color:var(--yellow);flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <span style="font-size:20px;flex-shrink:0">⏱</span>
+          <div>
+            <div style="font-size:13px">Sin respuesta de GPS</div>
+            <div style="font-size:11px;font-weight:400;color:var(--text-muted);margin-top:3px">
+              El dispositivo tardó demasiado. Verifica que el GPS esté encendido y vuelve a intentar.
+            </div>
+          </div>
+        </div>
+        <button onclick="_ckSolicitarGPS()" style="width:100%;padding:10px;background:var(--yellow);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+          🔄 Reintentar GPS
+        </button>
+      </div>`;
+
+  } else if (estado === 'no-soportado') {
+    banner.innerHTML = `
+      <div style="${estiloBase}background:var(--surface2);border:1px solid var(--border);color:var(--text-muted)">
+        <span style="font-size:18px;flex-shrink:0">📵</span>
+        <div>
+          <div>GPS no soportado en este navegador</div>
+          <div style="font-size:11px;font-weight:400;margin-top:2px">Intenta abriendo la página en Chrome o Safari</div>
+        </div>
+      </div>`;
+  }
+}
+
+function _ckSolicitarGPS() {
+  if (!navigator.geolocation) {
+    S._ckLat = null; S._ckLng = null; S._ckAccuracy = null;
+    _ckSetGpsBanner('no-soportado');
+    return;
+  }
+
+  _ckSetGpsBanner('buscando');
+  S._ckLat = null; S._ckLng = null; S._ckAccuracy = null;
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+      S._ckLat = lat; S._ckLng = lng; S._ckAccuracy = accuracy;
+      _ckSetGpsBanner('ok', `${lat.toFixed(5)}, ${lng.toFixed(5)} (±${Math.round(accuracy)} m)`);
+    },
+    err => {
+      S._ckLat = null; S._ckLng = null; S._ckAccuracy = null;
+      // err.code: 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT
+      if (err.code === 1) {
+        _ckSetGpsBanner('denegado');
+      } else if (err.code === 3) {
+        _ckSetGpsBanner('timeout');
+      } else {
+        _ckSetGpsBanner('timeout'); // POSITION_UNAVAILABLE → mismo flujo de reintento
+      }
+    },
+    { timeout: 12000, enableHighAccuracy: true, maximumAge: 0 }
+  );
 }
 
 async function _loadChecadasDriver() {
