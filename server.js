@@ -225,7 +225,7 @@ function serveStatic(res, filePath) {
 // EMAIL — Resend API (nativo, sin dependencias npm)
 // ════════════════════════════════════════════════════════════
 function buildConfirmationEmail(b) {
-  const TIPO_LABEL = { traslado:'Traslado', tour:'Tour', 'por-horas':'Por Horas' };
+  const TIPO_LABEL = { traslado:'Traslado', retorno:'Retorno', 'servicio-abierto':'Servicio Abierto', 'servicio-redondo':'Servicio Redondo', otro:'Otro' };
   const fmt  = (v, fallback='—') => (v !== undefined && v !== null && String(v).trim() !== '') ? String(v).trim() : fallback;
   const fmxn = v => new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(parseFloat(v)||0);
 
@@ -280,10 +280,6 @@ function buildConfirmationEmail(b) {
     ${row('Destino', fmt(b.destino))}
     ${row('No. de Pasajeros', fmt(b.pasajeros))}
     ${vuelo ? row('No. de Vuelo', vuelo) : ''}
-
-    <p style="font-size:12px;font-weight:700;color:#ea1481;letter-spacing:2px;text-transform:uppercase;margin:20px 0 4px;">Asignacion</p>
-    ${row('Driver Asignado', fmt(b.driverNombre, 'Por asignar'))}
-    ${row('Vehiculo', fmt(b.vehiculoNombre || b.vehiculoTipo, 'Por asignar'))}
 
     <p style="font-size:12px;font-weight:700;color:#ea1481;letter-spacing:2px;text-transform:uppercase;margin:20px 0 4px;">Precio</p>
     <div style="background:#fdf3f9;border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
@@ -458,9 +454,11 @@ const server = http.createServer(async (req, res) => {
         tipoServicio:    body.tipoServicio     || 'traslado',
         origenTipo:      body.origenTipo       || '',   // HXM | HXM II | HXA | OTRO
         origen:          body.origen           || '',
+        origenTitulo:    body.origenTitulo     || '',   // Título personalizado de origen
         destino:         body.destino          || '',
         fecha:           body.fecha            || '',
         hora:            body.hora             || '',
+        horaRegreso:     body.horaRegreso      || '',   // Para Servicio Redondo
         pasajeros:       parseInt(body.pasajeros)  || 1,
         habitacion:      body.habitacion       || '',
         referido:        body.referido         || '',
@@ -471,7 +469,7 @@ const server = http.createServer(async (req, res) => {
         precio:          parseFloat(body.precio)   || 0,
         horas:           parseInt(body.horas)      || 0,
         metodoPago:      body.metodoPago       || '',
-        estatusPago:     body.estatusPago      || 'pendiente',
+        estatusPago:     body.estatusPago      || 'pagado',
         estatusViaje:    'pendiente',
         serviceStartTime: null,
         notas:           body.notas            || '',
@@ -756,10 +754,10 @@ const server = http.createServer(async (req, res) => {
       return json(res, { id:user.id, username:user.username, nombre:user.nombre, rol:user.rol }, 201);
     }
 
-    // PUT /api/users/:id
+    // PUT /api/users/:id — solo admin_unico puede editar usuarios
     const umatch = pathname.match(/^\/api\/users\/([^/]+)$/);
     if (umatch && method === 'PUT') {
-      if (!ADMIN_ROLES.includes(rol)) return err(res, 'Sin permiso', 403);
+      if (rol !== 'admin_unico') return err(res, 'Solo la Cuenta Maestra puede editar usuarios', 403);
       const data = readData();
       const idx  = data.users.findIndex(u => u.id === umatch[1]);
       if (idx === -1) return err(res, 'Usuario no encontrado', 404);

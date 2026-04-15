@@ -632,6 +632,12 @@
     .form-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; max-width: 900px; }
     .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 
+    /* Paginación de Reservaciones */
+    .res-pagination {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; padding: 14px 0 4px; flex-wrap: wrap;
+    }
+
     /* ═══════════════════════════════════════════
        MOBILE RESPONSIVE — V2.7
     ═══════════════════════════════════════════ */
@@ -734,6 +740,14 @@
 
       .driver-override-btns { flex-direction: column !important; }
       .driver-override-btns button { width: 100% !important; padding: 8px !important; }
+
+      /* Paginación V2.8 */
+      .res-pagination { gap: 8px; }
+      .res-pagination .btn { padding: 9px 14px; font-size: 13px; }
+      .res-pagination span { width: 100%; text-align: center; order: -1; }
+
+      /* Tabla Usuarios — solo lectura */
+      .td-actions { flex-wrap: wrap; gap: 4px; }
     }
 
     @media (max-width: 480px) {
@@ -926,6 +940,12 @@ const today = () => new Intl.DateTimeFormat('en-CA', {timeZone: CANCUN_TZ}).form
 function statusLabel(s) {
   return {pendiente:'Pendiente','en-camino':'En Camino',completado:'Completado','no-show':'No Show','en-hotel':'En Hotel'}[s]||s;
 }
+function servicioLabelDisplay(b) {
+  // Muestra título personalizado si existe
+  const base = servicioLabel(b.tipoServicio);
+  if (b.tipoServicio === 'servicio-redondo' && b.origenTitulo) return `Servicio Redondo ${b.origenTitulo}`;
+  return base;
+}
 function esOrigenHotel(b) {
   return ['HXM','HXM II','HXA'].includes(b.origenTipo || b.origen);
 }
@@ -936,7 +956,16 @@ function metodoLabel(s) {
   return {tarjeta:'Tarjeta',link:'Link de Pago',efectivo:'Efectivo MXN',usd:'Efectivo USD','club-cash':'Club Cash'}[s]||s||'—';
 }
 function servicioLabel(s) {
-  return {traslado:'Traslado',tour:'Tour','por-horas':'Por Horas'}[s]||s;
+  return {
+    traslado:'Traslado',
+    retorno:'Retorno',
+    'servicio-abierto':'Servicio Abierto',
+    'servicio-redondo':'Servicio Redondo',
+    otro:'Otro',
+    // compatibilidad hacia atrás
+    tour:'Retorno',
+    'por-horas':'Servicio Abierto'
+  }[s]||s;
 }
 function badge(s) {
   return `<span class="badge badge-${s}">${statusLabel(s)}</span>`;
@@ -947,12 +976,16 @@ function badgePago(s) {
 
 // Auto-calculate price
 function calcPrice(destinoName, vehiculoTipo, tipoServicio, horas) {
-  if (tipoServicio === 'por-horas') {
+  // servicio-abierto (formerly por-horas): rate by vehicle + hours
+  if (tipoServicio === 'servicio-abierto' || tipoServicio === 'por-horas') {
     const rates = HORAS_RATES[vehiculoTipo];
     if (!rates) return 0;
     const h = Math.max(parseInt(horas) || 3, 3);
     return h <= 3 ? rates.min3h : rates.min3h + (h - 3) * rates.porHora;
   }
+  // precio libre — no auto-calc
+  if (['servicio-redondo','otro'].includes(tipoServicio)) return null;
+  // traslado / retorno: lookup tarifario
   const row = TARIFARIO.find(t => t.destino === destinoName);
   if (!row || !vehiculoTipo) return 0;
   return row[vehiculoTipo] || 0;
@@ -1114,6 +1147,11 @@ function navigate(viewId, opts={}) {
   S.currentView = viewId;
   setActiveNav(viewId);
   document.getElementById('pageTitle').textContent = PAGE_TITLES[viewId] || viewId;
+
+  // Persistir navegación en el hash de la URL (sin recargar)
+  if (history.replaceState) {
+    history.replaceState(null, '', '#' + viewId);
+  }
 
   const renders = {
     dashboard:         renderDashboard,
@@ -1554,23 +1592,52 @@ async function applyFilters() {
       items = items.concat(wels.map(w => ({ ...w, _type:'welcome' })));
     }
 
-    // Ordenar por fecha + hora
+    // Ordenar por fecha de creación descendente (más recientes primero)
     items.sort((a, b) => {
-      const da = (a.fecha||'') + (a.hora||'00:00');
-      const db = (b.fecha||'') + (b.hora||'00:00');
-      return da.localeCompare(db);
+      const ca = a.creadoEn || a.fecha || '';
+      const cb = b.creadoEn || b.fecha || '';
+      return cb.localeCompare(ca);
     });
 
     S.filteredItems = items; // store for CSV export
-
-    const list = document.getElementById('resList');
-    if (!list) return;
-    list.innerHTML = items.length === 0
-      ? `<div class="empty-state"><div class="empty-icon">📋</div><p>Sin reservaciones para los filtros seleccionados</p></div>`
-      : `<div class="booking-list">${items.map(item =>
-          item._type === 'welcome' ? welcomeCard(item, true) : bookingCard(item, true)
-        ).join('')}</div>`;
+    S.resPage = 0;           // reset to first page on filter change
+    renderResPage();
   } catch(e) { showToast('Error cargando reservaciones','error'); }
+}
+
+const RES_PAGE_SIZE = 25;
+
+function renderResPage() {
+  const list = document.getElementById('resList');
+  if (!list) return;
+  const items   = S.filteredItems || [];
+  const page    = S.resPage || 0;
+  const total   = items.length;
+  const pages   = Math.max(1, Math.ceil(total / RES_PAGE_SIZE));
+  const start   = page * RES_PAGE_SIZE;
+  const end     = Math.min(start + RES_PAGE_SIZE, total);
+  const slice   = items.slice(start, end);
+
+  const pagCtrl = pages > 1 ? `
+    <div class="res-pagination">
+      <button class="btn btn-secondary btn-sm" onclick="resPageGo(${page-1})" ${page===0?'disabled':''}>‹ Anterior</button>
+      <span style="color:var(--text-muted);font-size:13px">Página ${page+1} de ${pages} &nbsp;·&nbsp; ${total} registro${total!==1?'s':''}</span>
+      <button class="btn btn-secondary btn-sm" onclick="resPageGo(${page+1})" ${page>=pages-1?'disabled':''}>Siguiente ›</button>
+    </div>` : (total > 0 ? `<div class="res-pagination"><span style="color:var(--text-muted);font-size:13px">${total} registro${total!==1?'s':''}</span></div>` : '');
+
+  list.innerHTML = total === 0
+    ? `<div class="empty-state"><div class="empty-icon">📋</div><p>Sin reservaciones para los filtros seleccionados</p></div>`
+    : `<div class="booking-list">${slice.map(item =>
+        item._type === 'welcome' ? welcomeCard(item, true) : bookingCard(item, true)
+      ).join('')}</div>${pagCtrl}`;
+}
+
+function resPageGo(page) {
+  const items = S.filteredItems || [];
+  const pages = Math.max(1, Math.ceil(items.length / RES_PAGE_SIZE));
+  S.resPage = Math.max(0, Math.min(page, pages - 1));
+  renderResPage();
+  document.getElementById('resList')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function clearFilters() {
@@ -1656,7 +1723,8 @@ function bookingCard(b, clickable=true) {
         <button class="btn btn-sm" style="font-size:12px;padding:3px 8px;background:#25D366;color:#fff;border:none;border-radius:6px;cursor:pointer;margin-left:4px" onclick="event.stopPropagation();openWhatsappMsg(${JSON.stringify(b).replace(/"/g,'&quot;')})">📱</button>
       </div>
       <div class="booking-meta">
-        <span>📍 ${b.origenTipo||b.origen||'—'} → ${b.destino||'—'}</span>
+        <span>${servicioLabelDisplay(b)}</span>
+        <span>📍 ${b.origenTitulo||b.origenTipo||b.origen||'—'} → ${b.destino||'—'}</span>
         <span>🚗 ${b.vehiculoNombre||'—'}</span>
         <span>👤 ${b.driverNombre||'Sin asignar'}</span>
         <span>👥 ${b.pasajeros} pax</span>
@@ -1681,9 +1749,11 @@ async function openBookingDetail(id) {
       <div class="detail-grid">
         <div class="detail-item"><label>Fecha</label><p>${fdate(b.fecha)}</p></div>
         <div class="detail-item"><label>Hora</label><p>${b.hora||'—'}</p></div>
-        <div class="detail-item"><label>Tipo de Servicio</label><p>${servicioLabel(b.tipoServicio)}</p></div>
+        <div class="detail-item"><label>Tipo de Servicio</label><p>${servicioLabelDisplay(b)}</p></div>
         <div class="detail-item"><label>Pasajeros</label><p>${b.pasajeros}</p></div>
-        <div class="detail-item detail-full"><label>Origen → Destino</label><p>${b.origenTipo||b.origen||'—'}${b.origenFinal?' ('+b.origenFinal+')':''} → ${b.destino||'—'}</p></div>
+        <div class="detail-item detail-full"><label>Origen → Destino</label>
+          <p>${b.origenTitulo ? `<strong>${b.origenTitulo}</strong> — ` : ''}${b.origen||b.origenTipo||'—'} → ${b.destino||'—'}</p></div>
+        ${b.horaRegreso?`<div class="detail-item"><label>Hora de Regreso</label><p>${b.horaRegreso}</p></div>`:''}
         <div class="detail-item"><label>Vehículo</label><p>${b.vehiculoNombre||'—'}</p></div>
         <div class="detail-item"><label>Driver</label><p>${b.driverNombre||'Sin asignar'}</p></div>
         <div class="detail-item"><label>No. de Vuelo</label><p>${b.numeroVuelo||'—'}</p></div>
@@ -1873,6 +1943,13 @@ async function renderBookingForm(editId=null, prefillDate=null) {
   const initialPrecio = b.precio || 0;
   const tipoServicio  = b.tipoServicio || 'traslado';
 
+  // Detectar tipo con compatibilidad hacia atrás
+  const tipoNorm = {'tour':'retorno','por-horas':'servicio-abierto'}[tipoServicio] || tipoServicio;
+  const esOtro      = tipoNorm === 'otro';
+  const esAbierto   = tipoNorm === 'servicio-abierto';
+  const esRedondo   = tipoNorm === 'servicio-redondo';
+  const esTextoLibre = esOtro || esAbierto || esRedondo;
+
   vc.innerHTML = `
     <div class="form-wrap">
       ${canSeeWelcome && !editId ? `
@@ -1884,6 +1961,34 @@ async function renderBookingForm(editId=null, prefillDate=null) {
         ${editId ? '✏️ Editar Reservación' : '＋ Nueva Reservación'}
       </h2>
 
+      <!-- TIPO DE SERVICIO — SIEMPRE PRIMERO -->
+      <p class="form-section-title">Tipo de Servicio</p>
+      <div class="form-grid" style="margin-bottom:0">
+        <div class="form-group">
+          <label>Tipo de Servicio *</label>
+          <select id="f-tipo" onchange="onTipoChange()">
+            <option value="traslado"         ${tipoNorm==='traslado'        ?'selected':''}>Traslado</option>
+            <option value="retorno"          ${tipoNorm==='retorno'         ?'selected':''}>Retorno</option>
+            <option value="servicio-abierto" ${tipoNorm==='servicio-abierto'?'selected':''}>Servicio Abierto</option>
+            <option value="servicio-redondo" ${tipoNorm==='servicio-redondo'?'selected':''}>Servicio Redondo</option>
+            <option value="otro"             ${tipoNorm==='otro'            ?'selected':''}>Otro</option>
+          </select>
+        </div>
+        <div class="form-group" id="horas-group" style="${esAbierto?'':'display:none'}">
+          <label>No. de Horas (mín. 3)</label>
+          <input type="number" id="f-horas" value="${b.horas||3}" min="3" max="24" onchange="recalcPrice()">
+        </div>
+        <div class="form-group" id="origen-titulo-group">
+          <label id="origen-titulo-label">Título del Origen <span style="color:var(--text-muted);font-weight:400">(nombre corto)</span></label>
+          <input type="text" id="f-origen-titulo" value="${b.origenTitulo||''}" placeholder="Ej: Xcaret, Hotel Fiesta…">
+        </div>
+        <div class="form-group" id="hora-regreso-group" style="${esRedondo?'':'display:none'}">
+          <label>Hora de Regreso *</label>
+          <input type="time" id="f-hora-regreso" value="${b.horaRegreso||''}">
+        </div>
+      </div>
+
+      <hr class="section-divider">
       <p class="form-section-title">Datos del Huésped</p>
       <div class="form-grid">
         <div class="form-group">
@@ -1912,18 +2017,6 @@ async function renderBookingForm(editId=null, prefillDate=null) {
       <p class="form-section-title">Detalles del Servicio</p>
       <div class="form-grid">
         <div class="form-group">
-          <label>Tipo de Servicio *</label>
-          <select id="f-tipo" onchange="onTipoChange()">
-            <option value="traslado" ${tipoServicio==='traslado'?'selected':''}>Traslado</option>
-            <option value="tour"     ${tipoServicio==='tour'?'selected':''}>Tour</option>
-            <option value="por-horas"${tipoServicio==='por-horas'?'selected':''}>Por Horas</option>
-          </select>
-        </div>
-        <div class="form-group" id="horas-group" style="${tipoServicio==='por-horas'?'':'display:none'}">
-          <label>No. de Horas (mín. 3)</label>
-          <input type="number" id="f-horas" value="${b.horas||3}" min="3" max="24" onchange="recalcPrice()">
-        </div>
-        <div class="form-group">
           <label>Fecha *</label>
           <input type="date" id="f-fecha" value="${b.fecha||prefillDate||today()}" required>
         </div>
@@ -1931,7 +2024,9 @@ async function renderBookingForm(editId=null, prefillDate=null) {
           <label>Hora *</label>
           <input type="time" id="f-hora" value="${b.hora||''}">
         </div>
-        <div class="form-group">
+
+        <!-- ORIGEN: selector de hotel o texto libre según tipo -->
+        <div class="form-group" id="origen-selector-group" style="${esOtro?'display:none':''}">
           <label>Origen *</label>
           <select id="f-origen-tipo" onchange="onOrigenChange()">
             <option value="">— Seleccionar —</option>
@@ -1941,18 +2036,25 @@ async function renderBookingForm(editId=null, prefillDate=null) {
             <option value="OTRO"   ${(b.origenTipo==='OTRO'||(!['HXM','HXM II','HXA',''].includes(b.origenTipo||'')))&&b.origen?'selected':''}>OTRO</option>
           </select>
         </div>
-        <div class="form-group" id="origen-otro-group" style="${(b.origenTipo==='OTRO'||(!['HXM','HXM II','HXA','',undefined].includes(b.origenTipo)))&&b.origen?'':'display:none'}">
+        <div class="form-group" id="origen-otro-group" style="${(!esOtro && (b.origenTipo==='OTRO'||(!['HXM','HXM II','HXA','',undefined].includes(b.origenTipo)))&&b.origen)?'':'display:none'}">
           <label>Especificar Origen</label>
           <input type="text" id="f-origen-texto" value="${(!['HXM','HXM II','HXA'].includes(b.origenTipo||''))&&b.origen?b.origen:''}" placeholder="Nombre del hotel o lugar">
         </div>
-        <div class="form-group" id="destino-select-group" style="${tipoServicio==='por-horas'?'display:none':''}">
+        <div class="form-group" id="origen-libre-group" style="${esOtro?'':'display:none'}">
+          <label>Origen *</label>
+          <input type="text" id="f-origen-libre" value="${esOtro?(b.origen||''):''}" placeholder="Ingresa el origen">
+        </div>
+
+        <!-- DESTINO -->
+        <div class="form-group" id="destino-select-group" style="${esTextoLibre?'display:none':''}">
           <label>Destino *</label>
           <select id="f-destino" onchange="recalcPrice()">${destinoOptions}</select>
         </div>
-        <div class="form-group" id="destino-text-group" style="${tipoServicio==='por-horas'?'':'display:none'}">
-          <label>Destino / Ruta</label>
-          <input type="text" id="f-destino-text" value="${b.destino||''}" placeholder="Ej: Recorrido por Playa del Carmen">
+        <div class="form-group" id="destino-text-group" style="${esTextoLibre?'':'display:none'}">
+          <label>Destino *</label>
+          <input type="text" id="f-destino-text" value="${esTextoLibre?(b.destino||''):''}" placeholder="${esOtro?'Ingresa el destino':'Ej: Recorrido por Playa del Carmen'}">
         </div>
+
         <div class="form-group">
           <label>No. de Pasajeros *</label>
           <input type="number" id="f-pasajeros" value="${b.pasajeros||1}" min="1" max="20">
@@ -1984,7 +2086,7 @@ async function renderBookingForm(editId=null, prefillDate=null) {
           <label>Precio (MXN)</label>
           <div style="display:flex;gap:8px;align-items:center">
             <input type="number" id="f-precio" value="${initialPrecio}" min="0" style="flex:1" oninput="updatePriceDisplay()">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="recalcPrice()" title="Recalcular del tarifario">↺ Calcular</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="recalcPrice()" title="Recalcular del tarifario" id="btn-calcular">↺ Calcular</button>
           </div>
           <div class="price-display" id="priceDisplay" style="margin-top:8px">${fmxn(initialPrecio)}</div>
         </div>
@@ -2002,8 +2104,8 @@ async function renderBookingForm(editId=null, prefillDate=null) {
         <div class="form-group">
           <label>Estatus de Pago</label>
           <select id="f-pago">
-            <option value="pendiente"  ${(b.estatusPago||'pendiente')==='pendiente'?'selected':''}>Pago Pendiente</option>
-            <option value="pagado"     ${b.estatusPago==='pagado'?'selected':''}>Pagado</option>
+            <option value="pendiente"  ${b.estatusPago==='pendiente'?'selected':''}>Pago Pendiente</option>
+            <option value="pagado"     ${(!b.estatusPago||b.estatusPago==='pagado')?'selected':''}>Pagado</option>
             <option value="por-cobrar" ${b.estatusPago==='por-cobrar'?'selected':''}>Por Cobrar</option>
           </select>
         </div>
@@ -2031,26 +2133,41 @@ function onOrigenChange() {
 
 function onTipoChange() {
   const tipo = document.getElementById('f-tipo').value;
+  const esTextoLibre = ['servicio-abierto','servicio-redondo','otro'].includes(tipo);
+  const esPrecioLibre = ['servicio-redondo','otro'].includes(tipo);
+
   const horasGroup       = document.getElementById('horas-group');
+  const horaRegresoGroup = document.getElementById('hora-regreso-group');
+  const origenLibreGroup = document.getElementById('origen-libre-group');
   const destinoSelect    = document.getElementById('destino-select-group');
   const destinoText      = document.getElementById('destino-text-group');
-  horasGroup.style.display    = tipo==='por-horas' ? '' : 'none';
-  destinoSelect.style.display = tipo==='por-horas' ? 'none' : '';
-  destinoText.style.display   = tipo==='por-horas' ? '' : 'none';
+  const btnCalcular      = document.getElementById('btn-calcular');
+
+  horasGroup.style.display        = tipo==='servicio-abierto' ? '' : 'none';
+  horaRegresoGroup.style.display  = tipo==='servicio-redondo' ? '' : 'none';
+  origenLibreGroup.style.display  = tipo==='otro' ? '' : 'none';
+  destinoSelect.style.display     = esTextoLibre ? 'none' : '';
+  destinoText.style.display       = esTextoLibre ? '' : 'none';
+  if (btnCalcular) btnCalcular.style.display = esPrecioLibre ? 'none' : '';
+
   recalcPrice();
 }
 
 function recalcPrice() {
-  const tipo     = document.getElementById('f-tipo')?.value;
+  const tipo    = document.getElementById('f-tipo')?.value;
+  // precio libre: no auto-calc, leave user-entered price untouched
+  if (['servicio-redondo','otro'].includes(tipo)) return;
   const vSelect  = document.getElementById('f-vehiculo');
   const vRaw     = vSelect?.value || '';
   const vTipo    = vRaw === 'van' ? 'van8' : vRaw;
-  const destino  = tipo==='por-horas'
+  const esTextoLibre = ['servicio-abierto','servicio-redondo','otro'].includes(tipo);
+  const destino  = esTextoLibre
     ? document.getElementById('f-destino-text')?.value || ''
     : document.getElementById('f-destino')?.value || '';
   const horas    = parseInt(document.getElementById('f-horas')?.value) || 3;
 
   const precio   = calcPrice(destino, vTipo, tipo, horas);
+  if (precio === null) return; // precio libre
   const input    = document.getElementById('f-precio');
   const display  = document.getElementById('priceDisplay');
   if (input)   input.value   = precio;
@@ -2072,11 +2189,22 @@ async function saveBooking(editId=null) {
   if (!nombre) { showToast('Nombre del huésped requerido','error'); return; }
   if (!fecha)  { showToast('Fecha requerida','error'); return; }
 
-  const origenTipo  = document.getElementById('f-origen-tipo')?.value || '';
-  const origenTexto = document.getElementById('f-origen-texto')?.value || '';
-  const origenFinal = origenTipo === 'OTRO' ? origenTexto : origenTipo;
+  const esTextoLibre = ['servicio-abierto','servicio-redondo','otro'].includes(tipo);
+  const esOtro       = tipo === 'otro';
 
-  const destino = tipo==='por-horas'
+  // Origen: tipo=otro → f-origen-libre; resto = origenTipo dropdown (con posible texto libre)
+  let origenTipo, origenFinal;
+  if (esOtro) {
+    origenTipo  = 'OTRO';
+    origenFinal = document.getElementById('f-origen-libre')?.value?.trim() || '';
+  } else {
+    origenTipo  = document.getElementById('f-origen-tipo')?.value || '';
+    const origenTexto = document.getElementById('f-origen-texto')?.value || '';
+    origenFinal = origenTipo === 'OTRO' ? origenTexto : origenTipo;
+  }
+
+  // Destino: texto libre para servicio-abierto / redondo / otro
+  const destino = esTextoLibre
     ? document.getElementById('f-destino-text')?.value || ''
     : document.getElementById('f-destino')?.value || '';
 
@@ -2089,7 +2217,9 @@ async function saveBooking(editId=null) {
     tipoServicio:    tipo,
     origenTipo,
     origen:          origenFinal,
+    origenTitulo:    document.getElementById('f-origen-titulo')?.value?.trim()||'',
     destino,
+    horaRegreso:     tipo==='servicio-redondo' ? document.getElementById('f-hora-regreso')?.value||'' : '',
     fecha,
     hora:            document.getElementById('f-hora')?.value||'',
     pasajeros:       parseInt(document.getElementById('f-pasajeros')?.value)||1,
@@ -2098,9 +2228,9 @@ async function saveBooking(editId=null) {
     vehiculoTipo:    vehiculoTipo,
     driverId:        document.getElementById('f-conductor')?.value||'',
     precio:          parseFloat(document.getElementById('f-precio')?.value)||0,
-    horas:           tipo==='por-horas' ? parseInt(document.getElementById('f-horas')?.value)||3 : 0,
+    horas:           tipo==='servicio-abierto' ? parseInt(document.getElementById('f-horas')?.value)||3 : 0,
     metodoPago:      document.getElementById('f-metodo-pago')?.value||'',
-    estatusPago:     document.getElementById('f-pago')?.value||'pendiente',
+    estatusPago:     document.getElementById('f-pago')?.value||'pagado',
     notas:           document.getElementById('f-notas')?.value||'',
   };
 
@@ -2632,8 +2762,9 @@ async function renderUsuarios() {
                 <td><span class="tag">@${u.username}</span></td>
                 <td>${ROL_LABEL[u.rol]||u.rol}</td>
                 <td><div class="td-actions">
-                  <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.id}')">✏️ Editar</button>
-                  ${S.user.rol==='admin_unico'&&u.id!==S.user.id?`<button class="btn btn-danger btn-sm" onclick="confirmDeleteUser('${u.id}','${u.nombre}')">🗑</button>`:''}
+                  ${esUnico?`<button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.id}')">✏️ Editar</button>`:''}
+                  ${esUnico&&u.id!==S.user.id?`<button class="btn btn-danger btn-sm" onclick="confirmDeleteUser('${u.id}','${u.nombre}')">🗑</button>`:''}
+                  ${!esUnico?`<span style="color:var(--text-muted);font-size:12px">Solo lectura</span>`:''}
                 </div></td>
               </tr>`).join('')}
             </tbody>
@@ -3255,13 +3386,20 @@ async function initApp() {
   // Preload shared data
   await preloadData();
 
-  // Navigate to default view for role
+  // Navigate to view: restore from URL hash if valid, else role default
   const defaultView = {
     admin_unico: 'dashboard', admin: 'dashboard',
     coordinador: 'nueva', asesor: 'nueva',
     driver: 'mis-viajes'
   };
-  navigate(defaultView[S.user.rol]||'calendario');
+  const knownViews = ['dashboard','calendario','reservaciones','nueva','mis-viajes',
+    'estado-drivers','usuarios','vehiculos','welcome','nuevo-welcome',
+    'reloj-checador','recursos-humanos'];
+  const hashView = window.location.hash.slice(1);
+  const startView = (hashView && knownViews.includes(hashView))
+    ? hashView
+    : (defaultView[S.user.rol] || 'calendario');
+  navigate(startView);
 }
 
 // ════════════════════════════════════════════════════════════
