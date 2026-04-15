@@ -1532,9 +1532,9 @@ async function renderReservaciones() {
       </label>
     </div>` : ''}
     <div class="filters-bar" style="flex-wrap:wrap;gap:8px">
-      <input type="date" id="filterFechaInicio" value="${today()}" onchange="applyFilters()" title="Fecha inicio">
+      <input type="date" id="filterFechaInicio" value="" onchange="applyFilters()" title="Fecha inicio" placeholder="Desde">
       <span style="align-self:center;color:var(--text-muted);font-size:12px">–</span>
-      <input type="date" id="filterFechaFin" value="${today()}" onchange="applyFilters()" title="Fecha fin">
+      <input type="date" id="filterFechaFin" value="" onchange="applyFilters()" title="Fecha fin" placeholder="Hasta">
       <select id="filterEstatus" onchange="applyFilters()">
         <option value="">Todos los estatus</option>
         <option value="pendiente">Pendiente</option>
@@ -1647,8 +1647,8 @@ function clearFilters() {
   const bus  = document.getElementById('filterBuscar');
   const chkH = document.getElementById('chkHoteles');
   const chkW = document.getElementById('chkWelcome');
-  if (fi)   fi.value   = today();
-  if (ff)   ff.value   = today();
+  if (fi)   fi.value   = '';
+  if (ff)   ff.value   = '';
   if (est)  est.value  = '';
   if (bus)  bus.value  = '';
   if (chkH) chkH.checked = true;

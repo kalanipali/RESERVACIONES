@@ -19,9 +19,24 @@ try {
   });
 } catch (_) {}
 
-const PORT      = process.env.PORT || 3000;
-const DATA_FILE = path.join(__dirname, 'data.json');
-const PUBLIC    = path.join(__dirname, 'public');
+const PORT = process.env.PORT || 3000;
+const PUBLIC = path.join(__dirname, 'public');
+
+// ─── DATA_FILE: fuera del repo para sobrevivir deploys ────────
+// Orden de prioridad:
+//  1. Variable de entorno DATA_FILE (configuración manual en Hostinger)
+//  2. Un nivel arriba del repo: ../data.json   ← predeterminado
+//  3. Dentro del repo como fallback (solo si ya existe ahí)
+const DATA_FILE = (() => {
+  if (process.env.DATA_FILE) return process.env.DATA_FILE;
+  const outside = path.join(__dirname, '..', 'data.json');
+  const inside  = path.join(__dirname, 'data.json');
+  // Si ya existe en el repo, migrarlo afuera y usar el de afuera
+  if (!fs.existsSync(outside) && fs.existsSync(inside)) {
+    try { fs.copyFileSync(inside, outside); } catch(_) {}
+  }
+  return outside;
+})();
 
 // ─── UBICACIÓN ESPERADA (Reloj Checador) ─────────────────────
 // Coordenadas del punto central de trabajo (configurable)
