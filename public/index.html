@@ -631,131 +631,6 @@
     .filters-bar input:focus, .filters-bar select:focus { border-color: var(--pink); }
     .form-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; max-width: 900px; }
     .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
-
-    /* Paginación de Reservaciones */
-    .res-pagination {
-      display: flex; align-items: center; justify-content: center;
-      gap: 12px; padding: 14px 0 4px; flex-wrap: wrap;
-    }
-
-    /* ═══════════════════════════════════════════
-       MOBILE RESPONSIVE — V2.7
-    ═══════════════════════════════════════════ */
-    #mobileMenuBtn {
-      display: none;
-      background: none;
-      border: none;
-      font-size: 22px;
-      cursor: pointer;
-      padding: 4px 10px;
-      color: var(--text);
-      border-radius: 6px;
-    }
-    #mobileMenuBtn:hover { background: var(--surface2); }
-    #mobileOverlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      z-index: 99;
-    }
-    #mobileOverlay.open { display: block; }
-
-    @media (max-width: 768px) {
-      #app { flex-direction: column; height: 100vh; }
-
-      #sidebar {
-        position: fixed;
-        left: -260px;
-        top: 0;
-        bottom: 0;
-        z-index: 100;
-        width: 250px;
-        min-width: 250px;
-        transition: left 0.25s ease;
-        box-shadow: none;
-      }
-      #sidebar.open {
-        left: 0;
-        box-shadow: 4px 0 20px rgba(0,0,0,0.2);
-      }
-
-      #topbar { padding: 0 12px; height: 54px; gap: 8px; }
-      #pageTitle { font-size: 14px; flex: 1; }
-      #mobileMenuBtn { display: inline-flex; align-items: center; }
-      #topbarActions .btn { padding: 7px 12px; font-size: 12px; }
-
-      #mainWrapper { flex: 1; overflow: hidden; width: 100%; }
-
-      #viewContainer { padding: 12px; }
-
-      .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-      .stat-card { padding: 14px; }
-      .stat-value { font-size: 18px; }
-      .dash-grid, .dash-grid-3 { grid-template-columns: 1fr; gap: 12px; }
-
-      .form-grid, .form-grid-3 { grid-template-columns: 1fr; gap: 12px; }
-      .form-wrap { padding: 16px; }
-      .form-actions { flex-direction: column-reverse; }
-      .form-actions .btn { width: 100%; justify-content: center; padding: 12px; }
-
-      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-      table { min-width: 560px; }
-
-      .filters-bar { flex-direction: column; align-items: stretch; gap: 8px; }
-      .filters-bar input,
-      .filters-bar select,
-      .filters-bar button { width: 100%; }
-
-      .trip-card { padding: 14px; }
-      .trip-info-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-      .trip-actions { flex-direction: column; }
-      .trip-actions .btn { width: 100%; justify-content: center; padding: 12px; font-size: 13px; }
-
-      .booking-list { gap: 8px; }
-      .booking-card { padding: 12px; }
-      .booking-card-row { gap: 6px; }
-
-      #ck-time { font-size: 36px !important; letter-spacing: 1px !important; }
-      #ck-date { font-size: 12px !important; }
-
-      #modalBox {
-        max-height: 95vh;
-        border-radius: 14px 14px 0 0;
-        max-width: 100%;
-      }
-      #modalOverlay { align-items: flex-end; padding: 0; }
-      .detail-grid { grid-template-columns: 1fr; }
-
-      .cal-cell { min-height: 48px; padding: 4px; }
-      .cal-day-num { font-size: 11px; }
-      .cal-day-header { font-size: 9px; padding: 4px 0; }
-
-      #toast { bottom: 12px; right: 12px; left: 12px; max-width: none; }
-
-      .udn-toggle { width: 100%; }
-      .udn-btn { flex: 1; padding: 10px; font-size: 12px; }
-
-      .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-
-      .driver-override-btns { flex-direction: column !important; }
-      .driver-override-btns button { width: 100% !important; padding: 8px !important; }
-
-      /* Paginación V2.8 */
-      .res-pagination { gap: 8px; }
-      .res-pagination .btn { padding: 9px 14px; font-size: 13px; }
-      .res-pagination span { width: 100%; text-align: center; order: -1; }
-
-      /* Tabla Usuarios — solo lectura */
-      .td-actions { flex-wrap: wrap; gap: 4px; }
-    }
-
-    @media (max-width: 480px) {
-      .stats-grid { grid-template-columns: 1fr; }
-      .trip-info-grid { grid-template-columns: 1fr; }
-      .booking-meta { font-size: 11px; gap: 8px; }
-      #ck-time { font-size: 30px !important; }
-    }
   </style>
 </head>
 <body>
@@ -785,7 +660,6 @@
 <!-- ══════════════════════════════════════════════════
      MAIN APP
 ══════════════════════════════════════════════════ -->
-<div id="mobileOverlay" onclick="closeMobileMenu()"></div>
 <div id="app" class="hidden">
   <aside id="sidebar">
     <div class="sidebar-logo"><span class="logo-x">X</span>OTICS</div>
@@ -801,7 +675,6 @@
   </aside>
   <div id="mainWrapper">
     <header id="topbar">
-      <button id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Menú">☰</button>
       <h1 id="pageTitle">—</h1>
       <div id="topbarActions"></div>
     </header>
@@ -940,12 +813,6 @@ const today = () => new Intl.DateTimeFormat('en-CA', {timeZone: CANCUN_TZ}).form
 function statusLabel(s) {
   return {pendiente:'Pendiente','en-camino':'En Camino',completado:'Completado','no-show':'No Show','en-hotel':'En Hotel'}[s]||s;
 }
-function servicioLabelDisplay(b) {
-  // Muestra título personalizado si existe
-  const base = servicioLabel(b.tipoServicio);
-  if (b.tipoServicio === 'servicio-redondo' && b.origenTitulo) return `Servicio Redondo ${b.origenTitulo}`;
-  return base;
-}
 function esOrigenHotel(b) {
   return ['HXM','HXM II','HXA'].includes(b.origenTipo || b.origen);
 }
@@ -956,16 +823,7 @@ function metodoLabel(s) {
   return {tarjeta:'Tarjeta',link:'Link de Pago',efectivo:'Efectivo MXN',usd:'Efectivo USD','club-cash':'Club Cash'}[s]||s||'—';
 }
 function servicioLabel(s) {
-  return {
-    traslado:'Traslado',
-    retorno:'Retorno',
-    'servicio-abierto':'Servicio Abierto',
-    'servicio-redondo':'Servicio Redondo',
-    otro:'Otro',
-    // compatibilidad hacia atrás
-    tour:'Retorno',
-    'por-horas':'Servicio Abierto'
-  }[s]||s;
+  return {traslado:'Traslado',tour:'Tour','por-horas':'Por Horas'}[s]||s;
 }
 function badge(s) {
   return `<span class="badge badge-${s}">${statusLabel(s)}</span>`;
@@ -976,16 +834,12 @@ function badgePago(s) {
 
 // Auto-calculate price
 function calcPrice(destinoName, vehiculoTipo, tipoServicio, horas) {
-  // servicio-abierto (formerly por-horas): rate by vehicle + hours
-  if (tipoServicio === 'servicio-abierto' || tipoServicio === 'por-horas') {
+  if (tipoServicio === 'por-horas') {
     const rates = HORAS_RATES[vehiculoTipo];
     if (!rates) return 0;
     const h = Math.max(parseInt(horas) || 3, 3);
     return h <= 3 ? rates.min3h : rates.min3h + (h - 3) * rates.porHora;
   }
-  // precio libre — no auto-calc
-  if (['servicio-redondo','otro'].includes(tipoServicio)) return null;
-  // traslado / retorno: lookup tarifario
   const row = TARIFARIO.find(t => t.destino === destinoName);
   if (!row || !vehiculoTipo) return 0;
   return row[vehiculoTipo] || 0;
@@ -1076,13 +930,11 @@ function buildNav() {
       { id:'calendario',         icon:'📅',  label:'Calendario'         },
       { id:'reservaciones',      icon:'📋',  label:'Reservaciones'      },
       { id:'estado-drivers',     icon:'🚦',  label:'Estado de Drivers'  },
-      { id:'reloj-checador',     icon:'⏰',  label:'Reloj Checador'     },
     ],
     asesor: [
       { id:'nueva',              icon:'＋',  label:'Nueva Reservación'  },
       { id:'calendario',         icon:'📅',  label:'Calendario'         },
       { id:'reservaciones',      icon:'📋',  label:'Reservaciones'      },
-      { id:'reloj-checador',     icon:'⏰',  label:'Reloj Checador'     },
     ],
     driver: [
       { id:'mis-viajes',         icon:'🗺️', label:'Mis Viajes'         },
@@ -1121,24 +973,7 @@ const PAGE_TITLES = {
   'nuevo-welcome':     'Nuevo Welcome',
 };
 
-// ─── MOBILE MENU ──────────────────────────────────────────────
-function toggleMobileMenu() {
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('mobileOverlay');
-  if (!sidebar) return;
-  sidebar.classList.toggle('open');
-  if (sidebar.classList.contains('open')) overlay.classList.add('open');
-  else overlay.classList.remove('open');
-}
-function closeMobileMenu() {
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('mobileOverlay');
-  if (sidebar) sidebar.classList.remove('open');
-  if (overlay) overlay.classList.remove('open');
-}
-
 function navigate(viewId, opts={}) {
-  closeMobileMenu();
   // Limpiar intervals al salir de las vistas con auto-refresh
   clearInterval(driverStatusInterval); driverStatusInterval = null;
   clearInterval(dashboardInterval);    dashboardInterval    = null;
@@ -1147,11 +982,6 @@ function navigate(viewId, opts={}) {
   S.currentView = viewId;
   setActiveNav(viewId);
   document.getElementById('pageTitle').textContent = PAGE_TITLES[viewId] || viewId;
-
-  // Persistir navegación en el hash de la URL (sin recargar)
-  if (history.replaceState) {
-    history.replaceState(null, '', '#' + viewId);
-  }
 
   const renders = {
     dashboard:         renderDashboard,
@@ -1532,9 +1362,9 @@ async function renderReservaciones() {
       </label>
     </div>` : ''}
     <div class="filters-bar" style="flex-wrap:wrap;gap:8px">
-      <input type="date" id="filterFechaInicio" value="" onchange="applyFilters()" title="Fecha inicio" placeholder="Desde">
+      <input type="date" id="filterFechaInicio" value="${today()}" onchange="applyFilters()" title="Fecha inicio">
       <span style="align-self:center;color:var(--text-muted);font-size:12px">–</span>
-      <input type="date" id="filterFechaFin" value="" onchange="applyFilters()" title="Fecha fin" placeholder="Hasta">
+      <input type="date" id="filterFechaFin" value="${today()}" onchange="applyFilters()" title="Fecha fin">
       <select id="filterEstatus" onchange="applyFilters()">
         <option value="">Todos los estatus</option>
         <option value="pendiente">Pendiente</option>
@@ -1592,52 +1422,23 @@ async function applyFilters() {
       items = items.concat(wels.map(w => ({ ...w, _type:'welcome' })));
     }
 
-    // Ordenar por fecha de creación descendente (más recientes primero)
+    // Ordenar por fecha + hora
     items.sort((a, b) => {
-      const ca = a.creadoEn || a.fecha || '';
-      const cb = b.creadoEn || b.fecha || '';
-      return cb.localeCompare(ca);
+      const da = (a.fecha||'') + (a.hora||'00:00');
+      const db = (b.fecha||'') + (b.hora||'00:00');
+      return da.localeCompare(db);
     });
 
     S.filteredItems = items; // store for CSV export
-    S.resPage = 0;           // reset to first page on filter change
-    renderResPage();
+
+    const list = document.getElementById('resList');
+    if (!list) return;
+    list.innerHTML = items.length === 0
+      ? `<div class="empty-state"><div class="empty-icon">📋</div><p>Sin reservaciones para los filtros seleccionados</p></div>`
+      : `<div class="booking-list">${items.map(item =>
+          item._type === 'welcome' ? welcomeCard(item, true) : bookingCard(item, true)
+        ).join('')}</div>`;
   } catch(e) { showToast('Error cargando reservaciones','error'); }
-}
-
-const RES_PAGE_SIZE = 25;
-
-function renderResPage() {
-  const list = document.getElementById('resList');
-  if (!list) return;
-  const items   = S.filteredItems || [];
-  const page    = S.resPage || 0;
-  const total   = items.length;
-  const pages   = Math.max(1, Math.ceil(total / RES_PAGE_SIZE));
-  const start   = page * RES_PAGE_SIZE;
-  const end     = Math.min(start + RES_PAGE_SIZE, total);
-  const slice   = items.slice(start, end);
-
-  const pagCtrl = pages > 1 ? `
-    <div class="res-pagination">
-      <button class="btn btn-secondary btn-sm" onclick="resPageGo(${page-1})" ${page===0?'disabled':''}>‹ Anterior</button>
-      <span style="color:var(--text-muted);font-size:13px">Página ${page+1} de ${pages} &nbsp;·&nbsp; ${total} registro${total!==1?'s':''}</span>
-      <button class="btn btn-secondary btn-sm" onclick="resPageGo(${page+1})" ${page>=pages-1?'disabled':''}>Siguiente ›</button>
-    </div>` : (total > 0 ? `<div class="res-pagination"><span style="color:var(--text-muted);font-size:13px">${total} registro${total!==1?'s':''}</span></div>` : '');
-
-  list.innerHTML = total === 0
-    ? `<div class="empty-state"><div class="empty-icon">📋</div><p>Sin reservaciones para los filtros seleccionados</p></div>`
-    : `<div class="booking-list">${slice.map(item =>
-        item._type === 'welcome' ? welcomeCard(item, true) : bookingCard(item, true)
-      ).join('')}</div>${pagCtrl}`;
-}
-
-function resPageGo(page) {
-  const items = S.filteredItems || [];
-  const pages = Math.max(1, Math.ceil(items.length / RES_PAGE_SIZE));
-  S.resPage = Math.max(0, Math.min(page, pages - 1));
-  renderResPage();
-  document.getElementById('resList')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function clearFilters() {
@@ -1647,8 +1448,8 @@ function clearFilters() {
   const bus  = document.getElementById('filterBuscar');
   const chkH = document.getElementById('chkHoteles');
   const chkW = document.getElementById('chkWelcome');
-  if (fi)   fi.value   = '';
-  if (ff)   ff.value   = '';
+  if (fi)   fi.value   = today();
+  if (ff)   ff.value   = today();
   if (est)  est.value  = '';
   if (bus)  bus.value  = '';
   if (chkH) chkH.checked = true;
@@ -1723,8 +1524,7 @@ function bookingCard(b, clickable=true) {
         <button class="btn btn-sm" style="font-size:12px;padding:3px 8px;background:#25D366;color:#fff;border:none;border-radius:6px;cursor:pointer;margin-left:4px" onclick="event.stopPropagation();openWhatsappMsg(${JSON.stringify(b).replace(/"/g,'&quot;')})">📱</button>
       </div>
       <div class="booking-meta">
-        <span>${servicioLabelDisplay(b)}</span>
-        <span>📍 ${b.origenTitulo||b.origenTipo||b.origen||'—'} → ${b.destino||'—'}</span>
+        <span>📍 ${b.origenTipo||b.origen||'—'} → ${b.destino||'—'}</span>
         <span>🚗 ${b.vehiculoNombre||'—'}</span>
         <span>👤 ${b.driverNombre||'Sin asignar'}</span>
         <span>👥 ${b.pasajeros} pax</span>
@@ -1749,11 +1549,9 @@ async function openBookingDetail(id) {
       <div class="detail-grid">
         <div class="detail-item"><label>Fecha</label><p>${fdate(b.fecha)}</p></div>
         <div class="detail-item"><label>Hora</label><p>${b.hora||'—'}</p></div>
-        <div class="detail-item"><label>Tipo de Servicio</label><p>${servicioLabelDisplay(b)}</p></div>
+        <div class="detail-item"><label>Tipo de Servicio</label><p>${servicioLabel(b.tipoServicio)}</p></div>
         <div class="detail-item"><label>Pasajeros</label><p>${b.pasajeros}</p></div>
-        <div class="detail-item detail-full"><label>Origen → Destino</label>
-          <p>${b.origenTitulo ? `<strong>${b.origenTitulo}</strong> — ` : ''}${b.origen||b.origenTipo||'—'} → ${b.destino||'—'}</p></div>
-        ${b.horaRegreso?`<div class="detail-item"><label>Hora de Regreso</label><p>${b.horaRegreso}</p></div>`:''}
+        <div class="detail-item detail-full"><label>Origen → Destino</label><p>${b.origenTipo||b.origen||'—'}${b.origenFinal?' ('+b.origenFinal+')':''} → ${b.destino||'—'}</p></div>
         <div class="detail-item"><label>Vehículo</label><p>${b.vehiculoNombre||'—'}</p></div>
         <div class="detail-item"><label>Driver</label><p>${b.driverNombre||'Sin asignar'}</p></div>
         <div class="detail-item"><label>No. de Vuelo</label><p>${b.numeroVuelo||'—'}</p></div>
@@ -1943,13 +1741,6 @@ async function renderBookingForm(editId=null, prefillDate=null) {
   const initialPrecio = b.precio || 0;
   const tipoServicio  = b.tipoServicio || 'traslado';
 
-  // Detectar tipo con compatibilidad hacia atrás
-  const tipoNorm = {'tour':'retorno','por-horas':'servicio-abierto'}[tipoServicio] || tipoServicio;
-  const esOtro      = tipoNorm === 'otro';
-  const esAbierto   = tipoNorm === 'servicio-abierto';
-  const esRedondo   = tipoNorm === 'servicio-redondo';
-  const esTextoLibre = esOtro || esAbierto || esRedondo;
-
   vc.innerHTML = `
     <div class="form-wrap">
       ${canSeeWelcome && !editId ? `
@@ -1961,34 +1752,6 @@ async function renderBookingForm(editId=null, prefillDate=null) {
         ${editId ? '✏️ Editar Reservación' : '＋ Nueva Reservación'}
       </h2>
 
-      <!-- TIPO DE SERVICIO — SIEMPRE PRIMERO -->
-      <p class="form-section-title">Tipo de Servicio</p>
-      <div class="form-grid" style="margin-bottom:0">
-        <div class="form-group">
-          <label>Tipo de Servicio *</label>
-          <select id="f-tipo" onchange="onTipoChange()">
-            <option value="traslado"         ${tipoNorm==='traslado'        ?'selected':''}>Traslado</option>
-            <option value="retorno"          ${tipoNorm==='retorno'         ?'selected':''}>Retorno</option>
-            <option value="servicio-abierto" ${tipoNorm==='servicio-abierto'?'selected':''}>Servicio Abierto</option>
-            <option value="servicio-redondo" ${tipoNorm==='servicio-redondo'?'selected':''}>Servicio Redondo</option>
-            <option value="otro"             ${tipoNorm==='otro'            ?'selected':''}>Otro</option>
-          </select>
-        </div>
-        <div class="form-group" id="horas-group" style="${esAbierto?'':'display:none'}">
-          <label>No. de Horas (mín. 3)</label>
-          <input type="number" id="f-horas" value="${b.horas||3}" min="3" max="24" onchange="recalcPrice()">
-        </div>
-        <div class="form-group" id="origen-titulo-group">
-          <label id="origen-titulo-label">Título del Origen <span style="color:var(--text-muted);font-weight:400">(nombre corto)</span></label>
-          <input type="text" id="f-origen-titulo" value="${b.origenTitulo||''}" placeholder="Ej: Xcaret, Hotel Fiesta…">
-        </div>
-        <div class="form-group" id="hora-regreso-group" style="${esRedondo?'':'display:none'}">
-          <label>Hora de Regreso *</label>
-          <input type="time" id="f-hora-regreso" value="${b.horaRegreso||''}">
-        </div>
-      </div>
-
-      <hr class="section-divider">
       <p class="form-section-title">Datos del Huésped</p>
       <div class="form-grid">
         <div class="form-group">
@@ -2017,6 +1780,18 @@ async function renderBookingForm(editId=null, prefillDate=null) {
       <p class="form-section-title">Detalles del Servicio</p>
       <div class="form-grid">
         <div class="form-group">
+          <label>Tipo de Servicio *</label>
+          <select id="f-tipo" onchange="onTipoChange()">
+            <option value="traslado" ${tipoServicio==='traslado'?'selected':''}>Traslado</option>
+            <option value="tour"     ${tipoServicio==='tour'?'selected':''}>Tour</option>
+            <option value="por-horas"${tipoServicio==='por-horas'?'selected':''}>Por Horas</option>
+          </select>
+        </div>
+        <div class="form-group" id="horas-group" style="${tipoServicio==='por-horas'?'':'display:none'}">
+          <label>No. de Horas (mín. 3)</label>
+          <input type="number" id="f-horas" value="${b.horas||3}" min="3" max="24" onchange="recalcPrice()">
+        </div>
+        <div class="form-group">
           <label>Fecha *</label>
           <input type="date" id="f-fecha" value="${b.fecha||prefillDate||today()}" required>
         </div>
@@ -2024,9 +1799,7 @@ async function renderBookingForm(editId=null, prefillDate=null) {
           <label>Hora *</label>
           <input type="time" id="f-hora" value="${b.hora||''}">
         </div>
-
-        <!-- ORIGEN: selector de hotel o texto libre según tipo -->
-        <div class="form-group" id="origen-selector-group" style="${esOtro?'display:none':''}">
+        <div class="form-group">
           <label>Origen *</label>
           <select id="f-origen-tipo" onchange="onOrigenChange()">
             <option value="">— Seleccionar —</option>
@@ -2036,25 +1809,18 @@ async function renderBookingForm(editId=null, prefillDate=null) {
             <option value="OTRO"   ${(b.origenTipo==='OTRO'||(!['HXM','HXM II','HXA',''].includes(b.origenTipo||'')))&&b.origen?'selected':''}>OTRO</option>
           </select>
         </div>
-        <div class="form-group" id="origen-otro-group" style="${(!esOtro && (b.origenTipo==='OTRO'||(!['HXM','HXM II','HXA','',undefined].includes(b.origenTipo)))&&b.origen)?'':'display:none'}">
+        <div class="form-group" id="origen-otro-group" style="${(b.origenTipo==='OTRO'||(!['HXM','HXM II','HXA','',undefined].includes(b.origenTipo)))&&b.origen?'':'display:none'}">
           <label>Especificar Origen</label>
           <input type="text" id="f-origen-texto" value="${(!['HXM','HXM II','HXA'].includes(b.origenTipo||''))&&b.origen?b.origen:''}" placeholder="Nombre del hotel o lugar">
         </div>
-        <div class="form-group" id="origen-libre-group" style="${esOtro?'':'display:none'}">
-          <label>Origen *</label>
-          <input type="text" id="f-origen-libre" value="${esOtro?(b.origen||''):''}" placeholder="Ingresa el origen">
-        </div>
-
-        <!-- DESTINO -->
-        <div class="form-group" id="destino-select-group" style="${esTextoLibre?'display:none':''}">
+        <div class="form-group" id="destino-select-group" style="${tipoServicio==='por-horas'?'display:none':''}">
           <label>Destino *</label>
           <select id="f-destino" onchange="recalcPrice()">${destinoOptions}</select>
         </div>
-        <div class="form-group" id="destino-text-group" style="${esTextoLibre?'':'display:none'}">
-          <label>Destino *</label>
-          <input type="text" id="f-destino-text" value="${esTextoLibre?(b.destino||''):''}" placeholder="${esOtro?'Ingresa el destino':'Ej: Recorrido por Playa del Carmen'}">
+        <div class="form-group" id="destino-text-group" style="${tipoServicio==='por-horas'?'':'display:none'}">
+          <label>Destino / Ruta</label>
+          <input type="text" id="f-destino-text" value="${b.destino||''}" placeholder="Ej: Recorrido por Playa del Carmen">
         </div>
-
         <div class="form-group">
           <label>No. de Pasajeros *</label>
           <input type="number" id="f-pasajeros" value="${b.pasajeros||1}" min="1" max="20">
@@ -2086,7 +1852,7 @@ async function renderBookingForm(editId=null, prefillDate=null) {
           <label>Precio (MXN)</label>
           <div style="display:flex;gap:8px;align-items:center">
             <input type="number" id="f-precio" value="${initialPrecio}" min="0" style="flex:1" oninput="updatePriceDisplay()">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="recalcPrice()" title="Recalcular del tarifario" id="btn-calcular">↺ Calcular</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="recalcPrice()" title="Recalcular del tarifario">↺ Calcular</button>
           </div>
           <div class="price-display" id="priceDisplay" style="margin-top:8px">${fmxn(initialPrecio)}</div>
         </div>
@@ -2104,8 +1870,8 @@ async function renderBookingForm(editId=null, prefillDate=null) {
         <div class="form-group">
           <label>Estatus de Pago</label>
           <select id="f-pago">
-            <option value="pendiente"  ${b.estatusPago==='pendiente'?'selected':''}>Pago Pendiente</option>
-            <option value="pagado"     ${(!b.estatusPago||b.estatusPago==='pagado')?'selected':''}>Pagado</option>
+            <option value="pendiente"  ${(b.estatusPago||'pendiente')==='pendiente'?'selected':''}>Pago Pendiente</option>
+            <option value="pagado"     ${b.estatusPago==='pagado'?'selected':''}>Pagado</option>
             <option value="por-cobrar" ${b.estatusPago==='por-cobrar'?'selected':''}>Por Cobrar</option>
           </select>
         </div>
@@ -2133,41 +1899,26 @@ function onOrigenChange() {
 
 function onTipoChange() {
   const tipo = document.getElementById('f-tipo').value;
-  const esTextoLibre = ['servicio-abierto','servicio-redondo','otro'].includes(tipo);
-  const esPrecioLibre = ['servicio-redondo','otro'].includes(tipo);
-
   const horasGroup       = document.getElementById('horas-group');
-  const horaRegresoGroup = document.getElementById('hora-regreso-group');
-  const origenLibreGroup = document.getElementById('origen-libre-group');
   const destinoSelect    = document.getElementById('destino-select-group');
   const destinoText      = document.getElementById('destino-text-group');
-  const btnCalcular      = document.getElementById('btn-calcular');
-
-  horasGroup.style.display        = tipo==='servicio-abierto' ? '' : 'none';
-  horaRegresoGroup.style.display  = tipo==='servicio-redondo' ? '' : 'none';
-  origenLibreGroup.style.display  = tipo==='otro' ? '' : 'none';
-  destinoSelect.style.display     = esTextoLibre ? 'none' : '';
-  destinoText.style.display       = esTextoLibre ? '' : 'none';
-  if (btnCalcular) btnCalcular.style.display = esPrecioLibre ? 'none' : '';
-
+  horasGroup.style.display    = tipo==='por-horas' ? '' : 'none';
+  destinoSelect.style.display = tipo==='por-horas' ? 'none' : '';
+  destinoText.style.display   = tipo==='por-horas' ? '' : 'none';
   recalcPrice();
 }
 
 function recalcPrice() {
-  const tipo    = document.getElementById('f-tipo')?.value;
-  // precio libre: no auto-calc, leave user-entered price untouched
-  if (['servicio-redondo','otro'].includes(tipo)) return;
+  const tipo     = document.getElementById('f-tipo')?.value;
   const vSelect  = document.getElementById('f-vehiculo');
   const vRaw     = vSelect?.value || '';
   const vTipo    = vRaw === 'van' ? 'van8' : vRaw;
-  const esTextoLibre = ['servicio-abierto','servicio-redondo','otro'].includes(tipo);
-  const destino  = esTextoLibre
+  const destino  = tipo==='por-horas'
     ? document.getElementById('f-destino-text')?.value || ''
     : document.getElementById('f-destino')?.value || '';
   const horas    = parseInt(document.getElementById('f-horas')?.value) || 3;
 
   const precio   = calcPrice(destino, vTipo, tipo, horas);
-  if (precio === null) return; // precio libre
   const input    = document.getElementById('f-precio');
   const display  = document.getElementById('priceDisplay');
   if (input)   input.value   = precio;
@@ -2189,22 +1940,11 @@ async function saveBooking(editId=null) {
   if (!nombre) { showToast('Nombre del huésped requerido','error'); return; }
   if (!fecha)  { showToast('Fecha requerida','error'); return; }
 
-  const esTextoLibre = ['servicio-abierto','servicio-redondo','otro'].includes(tipo);
-  const esOtro       = tipo === 'otro';
+  const origenTipo  = document.getElementById('f-origen-tipo')?.value || '';
+  const origenTexto = document.getElementById('f-origen-texto')?.value || '';
+  const origenFinal = origenTipo === 'OTRO' ? origenTexto : origenTipo;
 
-  // Origen: tipo=otro → f-origen-libre; resto = origenTipo dropdown (con posible texto libre)
-  let origenTipo, origenFinal;
-  if (esOtro) {
-    origenTipo  = 'OTRO';
-    origenFinal = document.getElementById('f-origen-libre')?.value?.trim() || '';
-  } else {
-    origenTipo  = document.getElementById('f-origen-tipo')?.value || '';
-    const origenTexto = document.getElementById('f-origen-texto')?.value || '';
-    origenFinal = origenTipo === 'OTRO' ? origenTexto : origenTipo;
-  }
-
-  // Destino: texto libre para servicio-abierto / redondo / otro
-  const destino = esTextoLibre
+  const destino = tipo==='por-horas'
     ? document.getElementById('f-destino-text')?.value || ''
     : document.getElementById('f-destino')?.value || '';
 
@@ -2217,9 +1957,7 @@ async function saveBooking(editId=null) {
     tipoServicio:    tipo,
     origenTipo,
     origen:          origenFinal,
-    origenTitulo:    document.getElementById('f-origen-titulo')?.value?.trim()||'',
     destino,
-    horaRegreso:     tipo==='servicio-redondo' ? document.getElementById('f-hora-regreso')?.value||'' : '',
     fecha,
     hora:            document.getElementById('f-hora')?.value||'',
     pasajeros:       parseInt(document.getElementById('f-pasajeros')?.value)||1,
@@ -2228,9 +1966,9 @@ async function saveBooking(editId=null) {
     vehiculoTipo:    vehiculoTipo,
     driverId:        document.getElementById('f-conductor')?.value||'',
     precio:          parseFloat(document.getElementById('f-precio')?.value)||0,
-    horas:           tipo==='servicio-abierto' ? parseInt(document.getElementById('f-horas')?.value)||3 : 0,
+    horas:           tipo==='por-horas' ? parseInt(document.getElementById('f-horas')?.value)||3 : 0,
     metodoPago:      document.getElementById('f-metodo-pago')?.value||'',
-    estatusPago:     document.getElementById('f-pago')?.value||'pagado',
+    estatusPago:     document.getElementById('f-pago')?.value||'pendiente',
     notas:           document.getElementById('f-notas')?.value||'',
   };
 
@@ -2267,66 +2005,23 @@ async function loadDriverStatus() {
     if (!drivers) return;
     const grid = document.getElementById('driversStatusGrid');
     if (!grid) { clearInterval(driverStatusInterval); return; }
-
-    // ORDEN DINÁMICO V2.7:
-    // 1. Drivers disponibles/pendientes/en-hotel ordenados por hora de entrada (primero en checar = primero en lista)
-    // 2. En servicio → al final
-    // 3. No ha checado → al final del todo
-    drivers.sort((a, b) => {
-      const aFin = (a.estado === 'en-servicio') ? 1 : (a.noHaChecado ? 2 : 0);
-      const bFin = (b.estado === 'en-servicio') ? 1 : (b.noHaChecado ? 2 : 0);
-      if (aFin !== bFin) return aFin - bFin;
-      // Mismo grupo: ordenar por hora de entrada
-      if (a.checadaHoraEntrada && b.checadaHoraEntrada) {
-        return a.checadaHoraEntrada.localeCompare(b.checadaHoraEntrada);
-      }
-      if (a.checadaHoraEntrada) return -1;
-      if (b.checadaHoraEntrada) return 1;
-      return (a.nombre || '').localeCompare(b.nombre || '');
-    });
-
     grid.innerHTML = drivers.length === 0
       ? `<div class="empty-state"><div class="empty-icon">🚗</div><p>No hay drivers registrados</p></div>`
-      : drivers.map((d, idx) => {
+      : drivers.map(d => {
           const esServicio  = d.estado === 'en-servicio';
           const esPendiente = d.estado === 'pendiente';
-          const esEnHotel   = d.estado === 'en-hotel';
-          const esNoChecado = d.estado === 'no-checado' || d.noHaChecado;
-          const statusColor = esServicio  ? 'var(--blue)'
-                            : esPendiente ? 'var(--yellow)'
-                            : esEnHotel   ? 'var(--pink)'
-                            : esNoChecado ? 'var(--text-muted)'
-                            : 'var(--green)';
-          const statusTxt   = esServicio  ? 'En Servicio'
-                            : esPendiente ? 'Próximo Servicio'
-                            : esEnHotel   ? 'En Hotel'
-                            : esNoChecado ? 'No Ha Checado'
-                            : 'Disponible';
-          const statusDot   = esServicio  ? 'en-camino'
-                            : esPendiente ? 'pendiente'
-                            : esEnHotel   ? 'en-hotel'
-                            : esNoChecado ? 'no-show'
-                            : 'completado';
-          // Hora de entrada legible
-          let horaEntrada = '';
-          if (d.checadaHoraEntrada) {
-            try {
-              horaEntrada = new Date(d.checadaHoraEntrada).toLocaleTimeString('es-MX', {
-                timeZone: 'America/Cancun', hour:'2-digit', minute:'2-digit', hour12:false
-              });
-            } catch(_) {}
-          }
+          const statusColor = esServicio ? 'var(--blue)' : esPendiente ? 'var(--yellow)' : 'var(--green)';
+          const statusTxt   = esServicio ? 'En Servicio' : esPendiente ? 'Próximo Servicio' : 'Disponible';
+          const statusDot   = esServicio ? 'blue' : esPendiente ? 'yellow' : 'green';
           return `
           <div class="card" style="border-left:3px solid ${statusColor}">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-              <div style="min-width:24px;height:24px;border-radius:50%;background:var(--pink-glow);color:var(--pink);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0" title="Posición en orden operativo">${idx+1}</div>
-              <div style="width:42px;height:42px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--pink);flex-shrink:0">
+              <div style="width:42px;height:42px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--pink)">
                 ${d.nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
               </div>
-              <div style="flex:1;min-width:0">
+              <div>
                 <div style="font-weight:600;font-size:14px">${d.nombre}</div>
                 <span class="badge badge-${statusDot}" style="font-size:11px">${statusTxt}</span>
-                ${horaEntrada ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px">⏰ Entrada: ${horaEntrada}</div>` : ''}
               </div>
             </div>
             ${esServicio ? `
@@ -2342,22 +2037,13 @@ async function loadDriverStatus() {
                 ${d.destino ? `<div style="font-size:12px;color:var(--text-muted)">📍 ${d.destino}</div>` : ''}
                 ${d.refId ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">ID ${d.refId}</div>` : ''}
               </div>` : ''}
-            ${esEnHotel ? `
-              <div style="background:rgba(234,20,129,.06);border-radius:8px;padding:10px 12px">
-                <div style="font-size:11px;color:var(--pink)">🏨 Driver reportado en hotel</div>
-              </div>` : ''}
-            ${esNoChecado ? `
-              <div style="background:rgba(107,114,128,.08);border-radius:8px;padding:10px 12px">
-                <div style="font-size:11px;color:var(--text-muted)">⚠️ Sin registro de entrada hoy</div>
-              </div>` : ''}
             ${['admin_unico','admin','coordinador'].includes(S.user.rol) ? `
             <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
               <div style="font-size:10px;color:var(--text-muted);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Override manual</div>
-              <div class="driver-override-btns" style="display:flex;gap:6px;flex-wrap:wrap">
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
                 <button class="btn btn-sm" style="font-size:11px;padding:4px 8px;background:rgba(37,99,235,.1);color:var(--blue);border:1px solid rgba(37,99,235,.2);border-radius:6px" onclick="overrideDriverEstado('${d.id}','en-servicio')">🚗 En Servicio</button>
-                <button class="btn btn-sm" style="font-size:11px;padding:4px 8px;background:rgba(22,163,74,.1);color:var(--green);border:1px solid rgba(22,163,74,.2);border-radius:6px" onclick="overrideDriverEstado('${d.id}','disponible')">✅ Disponible</button>
+                <button class="btn btn-sm" style="font-size:11px;padding:4px 8px;background:rgba(22,163,74,.1);color:var(--green);border:1px solid rgba(22,163,74,.2);border-radius:6px" onclick="overrideDriverEstado('${d.id}','disponible')">✅ Finalizado</button>
                 <button class="btn btn-sm" style="font-size:11px;padding:4px 8px;background:rgba(234,20,129,.08);color:var(--pink);border:1px solid rgba(234,20,129,.2);border-radius:6px" onclick="overrideDriverEstado('${d.id}','en-hotel')">🏨 En Hotel</button>
-                <button class="btn btn-sm" style="font-size:11px;padding:4px 8px;background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);border-radius:6px" onclick="overrideDriverEstado('${d.id}','')" title="Quitar override">↺ Limpiar</button>
               </div>
             </div>` : ''}
           </div>`;
@@ -2367,13 +2053,11 @@ async function loadDriverStatus() {
 
 async function overrideDriverEstado(driverId, estado) {
   try {
-    // Si estado está vacío, enviar null para limpiar el override
-    const payload = { manualEstado: estado || null };
-    await PUT(`/api/drivers/${driverId}/estado`, payload);
-    const labels = { 'en-servicio':'En Servicio', 'disponible':'Disponible', 'en-hotel':'En Hotel', '':'Override limpiado' };
-    showToast(`Estado actualizado: ${labels[estado] ?? estado}`, 'success');
+    await PUT(`/api/drivers/${driverId}/estado`, { manualEstado: estado });
+    const labels = { 'en-servicio':'En Servicio', 'disponible':'Disponible / Finalizado', 'en-hotel':'En Hotel' };
+    showToast(`Estado actualizado: ${labels[estado] || estado}`, 'success');
     await loadDriverStatus();
-  } catch(e) { showToast('Error actualizando estado: ' + (e.message||''),'error'); }
+  } catch(e) { showToast('Error actualizando estado','error'); }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2457,10 +2141,7 @@ function tripCard(b) {
             ${esOrigenHotel(b)?`
             <button class="btn btn-sm" style="background:rgba(234,20,129,.15);color:var(--pink);border:1px solid rgba(234,20,129,.3);font-weight:700" onclick="updateTripStatus('${b.id}','en-hotel')">
               🏨 EN EL HOTEL
-            </button>` : ''}
-            <button class="btn btn-sm" style="background:rgba(22,163,74,.15);color:var(--green);border:1px solid rgba(22,163,74,.3);font-weight:700" onclick="yaEnElHotel('${b.id}','booking')">
-              🏨 YA EN EL HOTEL
-            </button>` : ''}
+            </button>` : ''}` : ''}
           <button class="btn btn-danger btn-sm" onclick="updateTripStatus('${b.id}','no-show')">❌ No Show</button>
         </div>`:''}
     </div>`;
@@ -2493,9 +2174,6 @@ function welcomeTripCard(w) {
             <button class="btn btn-success btn-sm" style="font-weight:700;letter-spacing:.5px" onclick="updateTripStatus('${w.id}','completado','welcome')">
               ✅ SERVICIO FINALIZADO
             </button>
-            <button class="btn btn-sm" style="background:rgba(22,163,74,.15);color:var(--green);border:1px solid rgba(22,163,74,.3);font-weight:700" onclick="yaEnElHotel('${w.id}','welcome')">
-              🏨 YA EN EL HOTEL
-            </button>
             <button class="btn btn-danger btn-sm" onclick="updateTripStatus('${w.id}','no-show','welcome')">❌ No Show</button>` : ''}
         </div>` : ''}
     </div>`;
@@ -2503,38 +2181,11 @@ function welcomeTripCard(w) {
 
 async function updateTripStatus(id, status, type='booking') {
   try {
-    // V2.7 — Si iniciando un nuevo servicio (en-camino), auto-completar cualquier servicio activo anterior
-    if (status === 'en-camino') {
-      try {
-        const [allBks, allWels] = await Promise.all([GET('/api/bookings'), GET('/api/welcomes')]);
-        const activos = [
-          ...((allBks||[]).filter(b => b.estatusViaje === 'en-camino' && b.id !== id).map(b => ({...b, _t:'booking'}))),
-          ...((allWels||[]).filter(w => w.estatusViaje === 'en-camino' && w.id !== id).map(w => ({...w, _t:'welcome'})))
-        ];
-        for (const prev of activos) {
-          const prevUrl = prev._t === 'welcome' ? `/api/welcomes/${prev.id}` : `/api/bookings/${prev.id}`;
-          try { await PUT(prevUrl, { estatusViaje: 'completado' }); } catch(_) {}
-        }
-      } catch(_) {}
-    }
     const apiUrl = type === 'welcome' ? `/api/welcomes/${id}` : `/api/bookings/${id}`;
     await PUT(apiUrl, { estatusViaje: status });
     showToast(`Estatus actualizado: ${statusLabel(status)}`, 'success');
     await loadMisViajes();
   } catch(e) { showToast(e.message,'error'); }
-}
-
-// V2.7 — "YA EN EL HOTEL": completa el servicio actual y marca al driver como disponible
-async function yaEnElHotel(id, type='booking') {
-  try {
-    const apiUrl = type === 'welcome' ? `/api/welcomes/${id}` : `/api/bookings/${id}`;
-    // 1. Completar el servicio actual
-    await PUT(apiUrl, { estatusViaje: 'completado' });
-    // 2. Marcar al driver como disponible (sincroniza con Estado de Drivers y sistema de asignación)
-    try { await POST('/api/drivers/me/disponible', {}); } catch(_) {}
-    showToast('🏨 Ya en el hotel — Estado: Disponible', 'success');
-    await loadMisViajes();
-  } catch(e) { showToast(e.message, 'error'); }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2762,9 +2413,8 @@ async function renderUsuarios() {
                 <td><span class="tag">@${u.username}</span></td>
                 <td>${ROL_LABEL[u.rol]||u.rol}</td>
                 <td><div class="td-actions">
-                  ${esUnico?`<button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.id}')">✏️ Editar</button>`:''}
-                  ${esUnico&&u.id!==S.user.id?`<button class="btn btn-danger btn-sm" onclick="confirmDeleteUser('${u.id}','${u.nombre}')">🗑</button>`:''}
-                  ${!esUnico?`<span style="color:var(--text-muted);font-size:12px">Solo lectura</span>`:''}
+                  <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.id}')">✏️ Editar</button>
+                  ${S.user.rol==='admin_unico'&&u.id!==S.user.id?`<button class="btn btn-danger btn-sm" onclick="confirmDeleteUser('${u.id}','${u.nombre}')">🗑</button>`:''}
                 </div></td>
               </tr>`).join('')}
             </tbody>
@@ -2947,8 +2597,7 @@ async function renderRelojChecador() {
       <div class="card" style="text-align:center;padding:28px 24px;margin-bottom:16px">
         <div id="ck-time" style="font-size:48px;font-weight:900;color:var(--text);letter-spacing:2px;font-variant-numeric:tabular-nums">--:--:--</div>
         <div id="ck-date" style="font-size:14px;color:var(--text-muted);margin-top:4px">—</div>
-        <!-- Banner de estado GPS -->
-        <div id="ck-gps-banner" style="margin-top:14px"></div>
+        <div id="ck-loc"  style="font-size:11px;color:var(--text-muted);margin-top:6px">📍 Obteniendo ubicación…</div>
       </div>
 
       <!-- Botones -->
@@ -2983,130 +2632,30 @@ async function renderRelojChecador() {
   tickClock();
   _clockInterval = setInterval(tickClock, 1000);
 
-  // Iniciar obtención de GPS
-  _ckSetGpsBanner('buscando');
-  _ckSolicitarGPS();
+  // Intentar obtener GPS
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+        S._ckLat = lat; S._ckLng = lng; S._ckAccuracy = accuracy;
+        const el = document.getElementById('ck-loc');
+        if (el) el.textContent = `📍 GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)} (±${Math.round(accuracy)}m)`;
+      },
+      () => {
+        S._ckLat = null; S._ckLng = null; S._ckAccuracy = null;
+        const el = document.getElementById('ck-loc');
+        if (el) el.textContent = '📍 Ubicación no disponible (se registrará solo IP)';
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  } else {
+    S._ckLat = null; S._ckLng = null;
+    const el = document.getElementById('ck-loc');
+    if (el) el.textContent = '📍 GPS no soportado en este dispositivo';
+  }
 
   // Cargar historial
   await _loadChecadasDriver();
-}
-
-// ─── GPS HELPERS ──────────────────────────────────────────────────────────────
-function _ckSetGpsBanner(estado, detalle) {
-  const banner = document.getElementById('ck-gps-banner');
-  if (!banner) return;
-
-  const estiloBase = 'border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;text-align:left;display:flex;align-items:flex-start;gap:10px;';
-
-  if (estado === 'buscando') {
-    banner.innerHTML = `
-      <div style="${estiloBase}background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.2);color:var(--blue)">
-        <span style="font-size:18px;flex-shrink:0">⏳</span>
-        <div>
-          <div>Obteniendo ubicación GPS…</div>
-          <div style="font-size:11px;font-weight:400;color:var(--text-muted);margin-top:2px">Por favor espera unos segundos</div>
-        </div>
-      </div>`;
-
-  } else if (estado === 'ok') {
-    banner.innerHTML = `
-      <div style="${estiloBase}background:rgba(22,163,74,.08);border:1px solid rgba(22,163,74,.2);color:var(--green)">
-        <span style="font-size:18px;flex-shrink:0">📍</span>
-        <div>
-          <div>Ubicación activa — GPS listo</div>
-          <div style="font-size:11px;font-weight:400;color:var(--text-muted);margin-top:2px">${detalle||''}</div>
-        </div>
-      </div>`;
-
-  } else if (estado === 'denegado') {
-    // Detectar si es iOS o Android para dar instrucciones específicas
-    const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const esAndroid = /Android/.test(navigator.userAgent);
-    let instrucciones = '';
-    if (esIOS) {
-      instrucciones = '<strong>iOS:</strong> Configuración → Safari → Ubicación → Permitir';
-    } else if (esAndroid) {
-      instrucciones = '<strong>Android:</strong> Toca el ícono 🔒 junto a la URL → Permisos → Ubicación → Permitir';
-    } else {
-      instrucciones = 'Haz clic en el ícono 🔒 o 🌐 junto a la URL del navegador → Permisos de ubicación → Permitir';
-    }
-    banner.innerHTML = `
-      <div style="${estiloBase}background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.25);color:var(--red);flex-direction:column;gap:8px">
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <span style="font-size:20px;flex-shrink:0">🚫</span>
-          <div>
-            <div style="font-size:13px">Acceso a ubicación denegado</div>
-            <div style="font-size:11px;font-weight:400;color:var(--text-muted);margin-top:3px">
-              El GPS es obligatorio para registrar la checada. Por favor actívalo:
-            </div>
-          </div>
-        </div>
-        <div style="background:rgba(220,38,38,.06);border-radius:7px;padding:8px 10px;font-size:11px;font-weight:500;color:#7f1d1d;line-height:1.6">
-          ${instrucciones}
-        </div>
-        <button onclick="_ckSolicitarGPS()" style="width:100%;padding:10px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
-          📍 Reintentar — Compartir Ubicación
-        </button>
-      </div>`;
-
-  } else if (estado === 'timeout') {
-    banner.innerHTML = `
-      <div style="${estiloBase}background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);color:var(--yellow);flex-direction:column;gap:8px">
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <span style="font-size:20px;flex-shrink:0">⏱</span>
-          <div>
-            <div style="font-size:13px">Sin respuesta de GPS</div>
-            <div style="font-size:11px;font-weight:400;color:var(--text-muted);margin-top:3px">
-              El dispositivo tardó demasiado. Verifica que el GPS esté encendido y vuelve a intentar.
-            </div>
-          </div>
-        </div>
-        <button onclick="_ckSolicitarGPS()" style="width:100%;padding:10px;background:var(--yellow);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
-          🔄 Reintentar GPS
-        </button>
-      </div>`;
-
-  } else if (estado === 'no-soportado') {
-    banner.innerHTML = `
-      <div style="${estiloBase}background:var(--surface2);border:1px solid var(--border);color:var(--text-muted)">
-        <span style="font-size:18px;flex-shrink:0">📵</span>
-        <div>
-          <div>GPS no soportado en este navegador</div>
-          <div style="font-size:11px;font-weight:400;margin-top:2px">Intenta abriendo la página en Chrome o Safari</div>
-        </div>
-      </div>`;
-  }
-}
-
-function _ckSolicitarGPS() {
-  if (!navigator.geolocation) {
-    S._ckLat = null; S._ckLng = null; S._ckAccuracy = null;
-    _ckSetGpsBanner('no-soportado');
-    return;
-  }
-
-  _ckSetGpsBanner('buscando');
-  S._ckLat = null; S._ckLng = null; S._ckAccuracy = null;
-
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      const { latitude: lat, longitude: lng, accuracy } = pos.coords;
-      S._ckLat = lat; S._ckLng = lng; S._ckAccuracy = accuracy;
-      _ckSetGpsBanner('ok', `${lat.toFixed(5)}, ${lng.toFixed(5)} (±${Math.round(accuracy)} m)`);
-    },
-    err => {
-      S._ckLat = null; S._ckLng = null; S._ckAccuracy = null;
-      // err.code: 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT
-      if (err.code === 1) {
-        _ckSetGpsBanner('denegado');
-      } else if (err.code === 3) {
-        _ckSetGpsBanner('timeout');
-      } else {
-        _ckSetGpsBanner('timeout'); // POSITION_UNAVAILABLE → mismo flujo de reintento
-      }
-    },
-    { timeout: 12000, enableHighAccuracy: true, maximumAge: 0 }
-  );
 }
 
 async function _loadChecadasDriver() {
@@ -3386,20 +2935,13 @@ async function initApp() {
   // Preload shared data
   await preloadData();
 
-  // Navigate to view: restore from URL hash if valid, else role default
+  // Navigate to default view for role
   const defaultView = {
     admin_unico: 'dashboard', admin: 'dashboard',
     coordinador: 'nueva', asesor: 'nueva',
     driver: 'mis-viajes'
   };
-  const knownViews = ['dashboard','calendario','reservaciones','nueva','mis-viajes',
-    'estado-drivers','usuarios','vehiculos','welcome','nuevo-welcome',
-    'reloj-checador','recursos-humanos'];
-  const hashView = window.location.hash.slice(1);
-  const startView = (hashView && knownViews.includes(hashView))
-    ? hashView
-    : (defaultView[S.user.rol] || 'calendario');
-  navigate(startView);
+  navigate(defaultView[S.user.rol]||'calendario');
 }
 
 // ════════════════════════════════════════════════════════════

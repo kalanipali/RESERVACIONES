@@ -19,24 +19,9 @@ try {
   });
 } catch (_) {}
 
-const PORT = process.env.PORT || 3000;
-const PUBLIC = path.join(__dirname, 'public');
-
-// ─── DATA_FILE: fuera del repo para sobrevivir deploys ────────
-// Orden de prioridad:
-//  1. Variable de entorno DATA_FILE (configuración manual en Hostinger)
-//  2. Un nivel arriba del repo: ../data.json   ← predeterminado
-//  3. Dentro del repo como fallback (solo si ya existe ahí)
-const DATA_FILE = (() => {
-  if (process.env.DATA_FILE) return process.env.DATA_FILE;
-  const outside = path.join(__dirname, '..', 'data.json');
-  const inside  = path.join(__dirname, 'data.json');
-  // Si ya existe en el repo, migrarlo afuera y usar el de afuera
-  if (!fs.existsSync(outside) && fs.existsSync(inside)) {
-    try { fs.copyFileSync(inside, outside); } catch(_) {}
-  }
-  return outside;
-})();
+const PORT      = process.env.PORT || 3000;
+const DATA_FILE = path.join(__dirname, 'data.json');
+const PUBLIC    = path.join(__dirname, 'public');
 
 // ─── UBICACIÓN ESPERADA (Reloj Checador) ─────────────────────
 // Coordenadas del punto central de trabajo (configurable)
@@ -240,7 +225,7 @@ function serveStatic(res, filePath) {
 // EMAIL — Resend API (nativo, sin dependencias npm)
 // ════════════════════════════════════════════════════════════
 function buildConfirmationEmail(b) {
-  const TIPO_LABEL = { traslado:'Traslado', retorno:'Retorno', 'servicio-abierto':'Servicio Abierto', 'servicio-redondo':'Servicio Redondo', otro:'Otro' };
+  const TIPO_LABEL = { traslado:'Traslado', tour:'Tour', 'por-horas':'Por Horas' };
   const fmt  = (v, fallback='—') => (v !== undefined && v !== null && String(v).trim() !== '') ? String(v).trim() : fallback;
   const fmxn = v => new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(parseFloat(v)||0);
 
@@ -295,6 +280,10 @@ function buildConfirmationEmail(b) {
     ${row('Destino', fmt(b.destino))}
     ${row('No. de Pasajeros', fmt(b.pasajeros))}
     ${vuelo ? row('No. de Vuelo', vuelo) : ''}
+
+    <p style="font-size:12px;font-weight:700;color:#ea1481;letter-spacing:2px;text-transform:uppercase;margin:20px 0 4px;">Asignacion</p>
+    ${row('Driver Asignado', fmt(b.driverNombre, 'Por asignar'))}
+    ${row('Vehiculo', fmt(b.vehiculoNombre || b.vehiculoTipo, 'Por asignar'))}
 
     <p style="font-size:12px;font-weight:700;color:#ea1481;letter-spacing:2px;text-transform:uppercase;margin:20px 0 4px;">Precio</p>
     <div style="background:#fdf3f9;border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
@@ -469,11 +458,9 @@ const server = http.createServer(async (req, res) => {
         tipoServicio:    body.tipoServicio     || 'traslado',
         origenTipo:      body.origenTipo       || '',   // HXM | HXM II | HXA | OTRO
         origen:          body.origen           || '',
-        origenTitulo:    body.origenTitulo     || '',   // Título personalizado de origen
         destino:         body.destino          || '',
         fecha:           body.fecha            || '',
         hora:            body.hora             || '',
-        horaRegreso:     body.horaRegreso      || '',   // Para Servicio Redondo
         pasajeros:       parseInt(body.pasajeros)  || 1,
         habitacion:      body.habitacion       || '',
         referido:        body.referido         || '',
@@ -484,7 +471,7 @@ const server = http.createServer(async (req, res) => {
         precio:          parseFloat(body.precio)   || 0,
         horas:           parseInt(body.horas)      || 0,
         metodoPago:      body.metodoPago       || '',
-        estatusPago:     body.estatusPago      || 'pagado',
+        estatusPago:     body.estatusPago      || 'pendiente',
         estatusViaje:    'pendiente',
         serviceStartTime: null,
         notas:           body.notas            || '',
@@ -560,9 +547,6 @@ const server = http.createServer(async (req, res) => {
       const todayCancun = cancunDateStr(new Date(nowMs));
       const welcomes = data.welcomes || [];
 
-      // Checadas de hoy (para ordenamiento por hora de entrada)
-      const checadasHoy = (data.checadas || []).filter(c => c.fecha === todayCancun);
-
       const result = drivers.map(d => {
         // 1. EN SERVICIO: booking o welcome con estatusViaje = 'en-camino'
         const enServicioBooking = data.bookings.find(b =>
@@ -579,14 +563,6 @@ const server = http.createServer(async (req, res) => {
           w.driverId === d.id && w.estatusViaje === 'pendiente' &&
           w.fecha === todayCancun && isWithinOneHour(w.fecha, w.hora, nowMs));
         const proximos = pendienteBooking || pendienteWelcome;
-
-        // 3. INFO DE CHECADA HOY: primera ENTRADA del driver hoy
-        const entradasDriver = checadasHoy
-          .filter(c => c.driverId === d.id && c.tipo === 'ENTRADA')
-          .sort((a,b) => (a.creadoEn||'').localeCompare(b.creadoEn||''));
-        const primeraEntrada = entradasDriver.length ? entradasDriver[0] : null;
-        const checadaHoraEntrada = primeraEntrada ? primeraEntrada.creadoEn : null;
-        const noHaChecado = !primeraEntrada;
 
         let estado = 'disponible';
         let minutos = null;
@@ -605,12 +581,9 @@ const server = http.createServer(async (req, res) => {
         } else if (d.manualEstado) {
           // Override manual (solo aplica si no hay estado natural)
           estado = d.manualEstado;
-        } else if (noHaChecado) {
-          // Sin checada de entrada hoy
-          estado = 'no-checado';
         }
 
-        return { id:d.id, nombre:d.nombre, estado, minutos, refId, destino, checadaHoraEntrada, noHaChecado };
+        return { id:d.id, nombre:d.nombre, estado, minutos, refId, destino };
       });
       return json(res, result);
     }
@@ -626,17 +599,6 @@ const server = http.createServer(async (req, res) => {
       data.users[uIdx] = { ...data.users[uIdx], manualEstado: nuevoEstado };
       writeData(data);
       return json(res, { ok:true, manualEstado: nuevoEstado });
-    }
-
-    // POST /api/drivers/me/disponible — el driver se marca disponible (Ya en el Hotel)
-    if (pathname === '/api/drivers/me/disponible' && method === 'POST') {
-      if (rol !== 'driver') return err(res, 'Sin permiso', 403);
-      const data = readData();
-      const uIdx = data.users.findIndex(u => u.id === sess.userId);
-      if (uIdx === -1) return err(res, 'Driver no encontrado', 404);
-      data.users[uIdx] = { ...data.users[uIdx], manualEstado: 'disponible' };
-      writeData(data);
-      return json(res, { ok:true, manualEstado: 'disponible' });
     }
 
     // GET /api/conductores (compatibilidad — devuelve drivers)
@@ -769,10 +731,10 @@ const server = http.createServer(async (req, res) => {
       return json(res, { id:user.id, username:user.username, nombre:user.nombre, rol:user.rol }, 201);
     }
 
-    // PUT /api/users/:id — solo admin_unico puede editar usuarios
+    // PUT /api/users/:id
     const umatch = pathname.match(/^\/api\/users\/([^/]+)$/);
     if (umatch && method === 'PUT') {
-      if (rol !== 'admin_unico') return err(res, 'Solo la Cuenta Maestra puede editar usuarios', 403);
+      if (!ADMIN_ROLES.includes(rol)) return err(res, 'Sin permiso', 403);
       const data = readData();
       const idx  = data.users.findIndex(u => u.id === umatch[1]);
       if (idx === -1) return err(res, 'Usuario no encontrado', 404);
@@ -840,9 +802,9 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
-    // POST /api/checadas — registrar entrada/salida (driver, coordinador, asesor)
+    // POST /api/checadas — registrar entrada/salida (solo driver)
     if (pathname === '/api/checadas' && method === 'POST') {
-      if (!['driver','coordinador','asesor'].includes(rol)) return err(res, 'Sin permiso', 403);
+      if (rol !== 'driver') return err(res, 'Sin permiso', 403);
 
       // ── 1. GPS REQUERIDO ─────────────────────────────────────
       const ckLat = typeof body.lat === 'number' ? body.lat : null;
@@ -923,14 +885,13 @@ const server = http.createServer(async (req, res) => {
       return json(res, checada, 201);
     }
 
-    // GET /api/checadas — historial de checadas (admin/admin_unico ven todo; driver/coordinador/asesor ven los suyos)
+    // GET /api/checadas — historial de checadas (admin/admin_unico; driver ve las suyas)
     if (pathname === '/api/checadas' && method === 'GET') {
       const HR_ROLES = ['admin_unico','admin'];
-      const STAFF_CHECKER_ROLES = ['driver','coordinador','asesor'];
-      if (!HR_ROLES.includes(rol) && !STAFF_CHECKER_ROLES.includes(rol)) return err(res, 'Sin permiso', 403);
+      if (!HR_ROLES.includes(rol) && rol !== 'driver') return err(res, 'Sin permiso', 403);
       const data = readData();
       let lista = data.checadas || [];
-      if (STAFF_CHECKER_ROLES.includes(rol)) lista = lista.filter(c => c.driverId === sess.userId);
+      if (rol === 'driver') lista = lista.filter(c => c.driverId === sess.userId);
       // Ordenar más reciente primero
       lista = [...lista].sort((a,b) => b.creadoEn.localeCompare(a.creadoEn));
       return json(res, lista);
@@ -1046,63 +1007,6 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-// ─── AUTO-CIERRE DIARIO DE SERVICIOS (08:50 AM Cancún) ──────────────────────
-function autoClosePreviousDayServices() {
-  const data = readData();
-  const todayCancun = cancunDateStr();
-  let changed = false;
-
-  // Cerrar bookings de días anteriores que sigan pendientes o en-camino
-  data.bookings.forEach((b, i) => {
-    if (b.fecha < todayCancun && (b.estatusViaje === 'pendiente' || b.estatusViaje === 'en-camino')) {
-      data.bookings[i] = { ...b, estatusViaje: 'completado', serviceEndTime: new Date().toISOString() };
-      changed = true;
-    }
-  });
-
-  // Cerrar welcomes de días anteriores
-  if (data.welcomes) {
-    data.welcomes.forEach((w, i) => {
-      if (w.fecha < todayCancun && (w.estatusViaje === 'pendiente' || w.estatusViaje === 'en-camino')) {
-        data.welcomes[i] = { ...w, estatusViaje: 'completado', serviceEndTime: new Date().toISOString() };
-        changed = true;
-      }
-    });
-  }
-
-  if (changed) {
-    writeData(data);
-    console.log(`[auto-cierre] ✅ Servicios de días anteriores cerrados automáticamente (${new Date().toISOString()})`);
-  }
-}
-
-// Programar auto-cierre a las 08:50 AM Cancún cada día
-function scheduleAutoCierre() {
-  function getNextRun() {
-    const now = new Date();
-    const todayStr = cancunDateStr(now);
-    let target = Date.parse(`${todayStr}T08:50:00-05:00`);
-    if (isNaN(target) || target <= now.getTime()) {
-      // Si ya pasó hoy, programar para mañana
-      const tomorrowMs = now.getTime() + 86400000;
-      const tomorrowStr = cancunDateStr(new Date(tomorrowMs));
-      target = Date.parse(`${tomorrowStr}T08:50:00-05:00`);
-    }
-    return target - now.getTime();
-  }
-
-  function runAndReschedule() {
-    try { autoClosePreviousDayServices(); } catch (e) { console.error('[auto-cierre] Error:', e.message); }
-    setTimeout(runAndReschedule, getNextRun());
-  }
-
-  setTimeout(runAndReschedule, getNextRun());
-  console.log('[auto-cierre] ⏰ Programado para las 08:50 AM Cancún cada día');
-
-  // También ejecutar al inicio si hay servicios de días anteriores que cerrar
-  try { autoClosePreviousDayServices(); } catch (e) { console.error('[auto-cierre] Error inicial:', e.message); }
-}
-
 // ─── START ────────────────────────────────────────────────────
 server.listen(PORT, () => {
   console.log('\n╔══════════════════════════════════════════╗');
@@ -1115,5 +1019,4 @@ server.listen(PORT, () => {
   console.log('   coordinador → Coordinador');
   console.log('   asesor      → Asesor de Ventas');
   console.log('   driver1     → Driver\n');
-  scheduleAutoCierre();
 });
